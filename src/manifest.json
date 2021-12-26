@@ -1,0 +1,21 @@
+{
+    "name": "Hexgrid Map",
+    "logoUrl": "https://raw.githubusercontent.com/googledatastudio/community-visualizations/master/docs/codelab/img/bar_chart.png",
+    "organization": "Ariel Perez",
+    "organizationUrl": "https://github.com/asparagus",
+    "supportUrl": "https://github.com/asparagus/hexgrid-map",
+    "packageUrl": "https://github.com/asparagus/hexgrid-map",
+    "description": "Data studio visualization for a hexgrid map",
+    "devMode": true,
+    "components": [{
+      "id": "hexgrid-map",
+      "name": "Hexgrid Map",
+      "iconUrl": "https://raw.githubusercontent.com/asparagus/hexgrid-map/master/logo.jpg",
+      "description": "Hexgrid Map built in d3.js",
+      "resource": {
+        "js": "gs://hexgrid-map-dev/main.js",
+        "config": "gs://hexgrid-map-dev/hexgrid-map.json",
+        "css": "gs://hexgrid-map-dev/hexgrid-map.css"
+      }
+    }]
+  }

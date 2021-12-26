@@ -1,0 +1,41 @@
+{
+  "name": "hexgrid-map",
+  "version": "1.0.0",
+  "description": "Data studio visualization for a hexgrid map",
+  "main": "hexgrid-map.js",
+  "scripts": {
+    "clean": "rm -f main.js; rm -f bundle.js",
+    "prebuild": "(cat node_modules/@google/dscc/_bundles/dscc.min.js; echo) > bundle.js && for f in simple-statistics d3-hexgrid d3; do (cat \"node_modules/${f}/dist/${f}.min.js\"; echo) >> bundle.js; done && echo \"Prebuild finished!\"",
+    "build": "(cat bundle.js; echo; cat src/hexgrid-map.js) > main.js && echo \"Build finished!\"",
+    "upload": "gsutil cp -a public-read src/* gs://hexgrid-map-dev && gsutil cp -a public-read main.js gs://hexgrid-map-dev && gsutil cp -a public-read src/manifest.json gs://hexgrid-map-dev",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/asparagus/hexgrid-map.git"
+  },
+  "keywords": [
+    "d3",
+    "hexgrid",
+    "map",
+    "visualization",
+    "js",
+    "data",
+    "studio"
+  ],
+  "author": "Ariel Perez",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/asparagus/hexgrid-map/issues"
+  },
+  "homepage": "https://github.com/asparagus/hexgrid-map#readme",
+  "dependencies": {
+    "@google/dscc": "^0.3.22",
+    "d3": "^7.2.1",
+    "d3-hexgrid": "^0.3.0",
+    "simple-statistics": "^7.7.0"
+  },
+  "devDependencies": {
+    "browserify": "^17.0.0"
+  }
+}
