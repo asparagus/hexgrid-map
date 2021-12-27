@@ -1,221 +1,23 @@
-// 37.7749° N, 122.4194° W
-// 37.75 - 37.80
-// 122.40 - 122.45
+function drawViz(data) {
+    // Size
+    const height = dscc.getHeight();
+    const width = dscc.getWidth();
 
-let pointData = [
-    {lat: 37.77, lng: -122.43},
-    {lat: 37.77, lng: -122.43},
-    {lat: 37.77, lng: -122.43},
-    {lat: 37.77, lng: -122.43},
-    {lat: 37.77, lng: -122.43},
-    {lat: 37.77, lng: -122.43},
-    {lat: 37.77, lng: -122.43},
-    {lat: 37.76, lng: -122.40},
-    {lat: 37.78, lng: -122.41},
-    {lat: 37.75, lng: -122.42},
-    {lat: 37.77, lng: -122.41},
-    {lat: 37.75, lng: -122.42},
-    {lat: 37.78, lng: -122.41},
-    {lat: 37.76, lng: -122.44},
-    {lat: 37.77, lng: -122.40},
-    {lat: 37.80, lng: -122.41},
-    {lat: 37.79, lng: -122.41},
-    {lat: 37.78, lng: -122.41},
-    {lat: 37.76, lng: -122.41},
-    {lat: 37.77, lng: -122.41},
-    {lat: 37.78, lng: -122.40},
-    {lat: 37.76, lng: -122.42},
-    {lat: 37.77, lng: -122.45},
-    {lat: 37.79, lng: -122.45},
-    {lat: 37.77, lng: -122.41},
-    {lat: 37.79, lng: -122.41},
-    {lat: 37.76, lng: -122.40},
-    {lat: 37.79, lng: -122.41},
-    {lat: 37.80, lng: -122.41},
-    {lat: 37.77, lng: -122.43},
-    {lat: 37.76, lng: -122.44},
-    {lat: 37.80, lng: -122.41},
-    {lat: 37.80, lng: -122.40},
-    {lat: 37.79, lng: -122.42},
-    {lat: 37.75, lng: -122.45},
-    {lat: 37.78, lng: -122.40},
-    {lat: 37.77, lng: -122.41},
-    {lat: 37.78, lng: -122.45},
-    {lat: 37.76, lng: -122.42},
-    {lat: 37.79, lng: -122.41},
-    {lat: 37.79, lng: -122.42},
-    {lat: 37.78, lng: -122.41},
-    {lat: 37.76, lng: -122.44},
-    {lat: 37.77, lng: -122.41},
-    {lat: 37.76, lng: -122.42},
-    {lat: 37.79, lng: -122.45},
-    {lat: 37.76, lng: -122.40},
-    {lat: 37.78, lng: -122.41},
-    {lat: 37.76, lng: -122.42},
-    {lat: 37.79, lng: -122.45},
-    {lat: 37.79, lng: -122.45},
-    {lat: 37.78, lng: -122.41},
-    {lat: 37.80, lng: -122.42},
-    {lat: 37.76, lng: -122.42},
-    {lat: 37.75, lng: -122.42},
-    {lat: 37.75, lng: -122.43},
-    {lat: 37.76, lng: -122.45},
-    {lat: 37.76, lng: -122.45},
-    {lat: 37.80, lng: -122.41},
-    {lat: 37.79, lng: -122.42},
-    {lat: 37.78, lng: -122.40},
-    {lat: 37.76, lng: -122.41},
-    {lat: 37.79, lng: -122.42},
-    {lat: 37.77, lng: -122.41},
-    {lat: 37.78, lng: -122.41},
-    {lat: 37.76, lng: -122.43},
-    {lat: 37.79, lng: -122.44},
-    {lat: 37.79, lng: -122.44},
-    {lat: 37.77, lng: -122.41},
-    {lat: 37.76, lng: -122.44},
-    {lat: 37.77, lng: -122.40},
-    {lat: 37.75, lng: -122.43},
-    {lat: 37.80, lng: -122.42},
-    {lat: 37.76, lng: -122.41},
-    {lat: 37.76, lng: -122.43},
-    {lat: 37.76, lng: -122.41},
-    {lat: 37.79, lng: -122.43},
-    {lat: 37.77, lng: -122.42},
-    {lat: 37.79, lng: -122.45},
-    {lat: 37.77, lng: -122.42},
-    {lat: 37.77, lng: -122.42},
-    {lat: 37.79, lng: -122.43},
-    {lat: 37.76, lng: -122.42},
-    {lat: 37.76, lng: -122.44},
-    {lat: 37.79, lng: -122.42},
-    {lat: 37.76, lng: -122.42},
-    {lat: 37.79, lng: -122.45},
-    {lat: 37.78, lng: -122.44},
-    {lat: 37.77, lng: -122.41},
-    {lat: 37.77, lng: -122.43},
-    {lat: 37.79, lng: -122.41},
-    {lat: 37.75, lng: -122.44},
-    {lat: 37.77, lng: -122.41},
-    {lat: 37.77, lng: -122.44},
-    {lat: 37.76, lng: -122.41},
-    {lat: 37.75, lng: -122.41},
-    {lat: 37.77, lng: -122.45},
-    {lat: 37.79, lng: -122.44},
-    {lat: 37.77, lng: -122.43},
-    {lat: 37.78, lng: -122.43},
-    {lat: 37.78, lng: -122.43},
-    {lat: 37.79, lng: -122.42},
-    {lat: 37.77, lng: -122.45},
-    {lat: 37.76, lng: -122.42},
-    {lat: 37.77, lng: -122.40},
-    {lat: 37.76, lng: -122.42},
-    {lat: 37.77, lng: -122.42},
-    {lat: 37.76, lng: -122.44},
-    {lat: 37.78, lng: -122.44},
-    {lat: 37.75, lng: -122.43},
-    {lat: 37.76, lng: -122.42},
-    {lat: 37.79, lng: -122.41},
-    {lat: 37.77, lng: -122.44},
-    {lat: 37.76, lng: -122.45},
-    {lat: 37.79, lng: -122.41},
-    {lat: 37.78, lng: -122.44},
-    {lat: 37.77, lng: -122.41},
-    {lat: 37.76, lng: -122.42},
-    {lat: 37.76, lng: -122.42},
-    {lat: 37.80, lng: -122.41},
-    {lat: 37.76, lng: -122.44},
-    {lat: 37.77, lng: -122.42},
-    {lat: 37.78, lng: -122.44},
-    {lat: 37.76, lng: -122.40},
-    {lat: 37.78, lng: -122.42},
-    {lat: 37.79, lng: -122.41},
-    {lat: 37.76, lng: -122.43},
-    {lat: 37.76, lng: -122.45},
-    {lat: 37.75, lng: -122.42},
-    {lat: 37.80, lng: -122.42},
-    {lat: 37.78, lng: -122.43},
-    {lat: 37.77, lng: -122.43},
-    {lat: 37.79, lng: -122.43},
-    {lat: 37.79, lng: -122.40},
-    {lat: 37.79, lng: -122.41},
-    {lat: 37.80, lng: -122.44},
-    {lat: 37.78, lng: -122.42},
-    {lat: 37.77, lng: -122.44},
-    {lat: 37.76, lng: -122.41},
-    {lat: 37.79, lng: -122.41},
-    {lat: 37.78, lng: -122.41},
-    {lat: 37.79, lng: -122.45},
-    {lat: 37.80, lng: -122.42},
-    {lat: 37.80, lng: -122.44},
-    {lat: 37.76, lng: -122.41},
-    {lat: 37.77, lng: -122.41},
-    {lat: 37.76, lng: -122.42},
-    {lat: 37.78, lng: -122.43},
-    {lat: 37.77, lng: -122.44},
-    {lat: 37.77, lng: -122.45},
-    {lat: 37.79, lng: -122.43},
-    {lat: 37.78, lng: -122.40},
-    {lat: 37.80, lng: -122.43},
-    {lat: 37.76, lng: -122.44},
-    {lat: 37.80, lng: -122.44},
-    {lat: 37.77, lng: -122.44},
-    {lat: 37.78, lng: -122.44},
-    {lat: 37.78, lng: -122.41},
-    {lat: 37.79, lng: -122.43},
-    {lat: 37.78, lng: -122.40},
-    {lat: 37.79, lng: -122.41},
-    {lat: 37.75, lng: -122.40},
-    {lat: 37.78, lng: -122.43},
-    {lat: 37.79, lng: -122.41},
-    {lat: 37.75, lng: -122.41},
-    {lat: 37.77, lng: -122.44},
-    {lat: 37.78, lng: -122.42},
-    {lat: 37.76, lng: -122.44},
-    {lat: 37.76, lng: -122.43},
-    {lat: 37.76, lng: -122.41},
-    {lat: 37.80, lng: -122.40},
-    {lat: 37.77, lng: -122.44},
-    {lat: 37.79, lng: -122.44},
-    {lat: 37.77, lng: -122.43},
-    {lat: 37.76, lng: -122.45},
-    {lat: 37.76, lng: -122.41},
-    {lat: 37.77, lng: -122.42},
-    {lat: 37.78, lng: -122.41},
-    {lat: 37.75, lng: -122.41},
-    {lat: 37.79, lng: -122.43},
-    {lat: 37.76, lng: -122.43},
-    {lat: 37.76, lng: -122.42},
-    {lat: 37.76, lng: -122.42},
-    {lat: 37.77, lng: -122.40},
-    {lat: 37.80, lng: -122.40},
-    {lat: 37.75, lng: -122.45},
-    {lat: 37.80, lng: -122.43},
-    {lat: 37.78, lng: -122.41},
-    {lat: 37.79, lng: -122.44},
-    {lat: 37.80, lng: -122.42},
-    {lat: 37.78, lng: -122.41},
-    {lat: 37.77, lng: -122.40},
-    {lat: 37.78, lng: -122.41},
-    {lat: 37.78, lng: -122.44},
-    {lat: 37.78, lng: -122.41},
-    {lat: 37.77, lng: -122.43},
-    {lat: 37.78, lng: -122.41},
-    {lat: 37.76, lng: -122.42},
-    {lat: 37.78, lng: -122.42},
-    {lat: 37.75, lng: -122.44},
-    {lat: 37.76, lng: -122.44},
-    {lat: 37.76, lng: -122.41},
-    {lat: 37.77, lng: -122.44},
-    {lat: 37.78, lng: -122.45},
-    {lat: 37.78, lng: -122.42},
-    {lat: 37.76, lng: -122.41},
-];
+    // Data
+    const pointData = data.tables.DEFAULT;
 
+    // Options
+    const projectionName = data.style.projection.value;
+    const map = data.style.map.value;
+    const hexagonSize = data.style.hexagon_size.value;
+    const backgroundColor = data.style.background_color.value;
 
-function draw(geo, pointData) {
+    const geo = getMapGeoJson(map);
+    draw(geo, pointData, width, height, projectionName, hexagonSize, backgroundColor);
+}
+
+function draw(geo, pointData, width, height, projectionName, hexagonSize, backgroundColor) {
     // Some set up.
-    const width = 1800;
-    const height = 1000;
     const pr = window.devicePixelRatio || 1;
 
     // Crisp canvas and context.
@@ -226,7 +28,9 @@ function draw(geo, pointData) {
     const context = canvas.node().getContext('2d');
     context.scale(pr, pr);
 
-    // Background.
+    // Background color
+    context.fillStyle = backgroundColor;
+    context.fillRect(0, 0, width, height);
     // const gradient = context.createRadialGradient(width / 2, height / 2, 5, width / 2, height / 2, width / 2);
     // gradient.addColorStop(0, '#0C2648');
     // gradient.addColorStop(1, '#091426');
@@ -234,7 +38,7 @@ function draw(geo, pointData) {
     // context.fillRect(0, 0, width, height);
 
     // Projection and path.
-    const projection = d3.geoAlbers().fitSize([width, height], geo);
+    const projection = getProjection(projectionName).fitSize([width, height], geo);
     const geoPath = d3.geoPath()
       .projection(projection)
       .context(context);
@@ -252,7 +56,7 @@ function draw(geo, pointData) {
       .geography(geo)
       .projection(projection)
       .pathGenerator(geoPath)
-      .hexRadius(5);
+      .hexRadius(hexagonSize);
 
     // Hexgrid instanace.
     const hex = hexgrid(pointData);
@@ -281,25 +85,84 @@ function draw(geo, pointData) {
     });
 }
 
-// ready(geoData, pointData);
-// Load data.
-const world = d3.json(
-// San Francisco:
-'https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/san-francisco.geojson'
-// 'https://raw.githubusercontent.com/larsvers/map-store/master/us_mainland_geo.json'
-// 'https://raw.githubusercontent.com/larsvers/map-store/master/earth-lands-10km.json'
-);
-//   const points = d3.csv(
-//     'https://raw.githubusercontent.com/larsvers/data-store/master/cities_top_10000_world.csv'
-//   );
+/* Cannot use this code from community visualization since it uses a query.
+function getMapGeoJson(map_name) {
+    /**
+     * Download the geojson if available.
+     *
+     * Retrieves the data from the GCS bucket "hexgrid-map-dev" where they are backed up.
+     * These were originally available from 'https://github.com/codeforgermany/click_that_hood/blob/main/public/data/'.
+     * To retrieve them, use the link like this: 'https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/'
+     *//*
+    // let url = `https://storage.googleapis.com/hexgrid-map-dev/maps/${map_name}.geojson`;
+    let url = `https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/${map_name}.geojson`;
+    return d3.json(url);
+}
+*/
 
-  Promise.all([world]).then(res => {
-    console.log('Ready');
-    let [geoData] = res;
+function getMapGeoJson(map_name) {
+    if (map_name in window.maps) {
+        return window.maps[map_name];
+    }
+    throw `${map_name} map not included in build!`;
+}
 
-    draw(geoData, pointData);
-  });
-//   Promise.all([world, points]).then(res => {
-//     let [geoData, userData] = res;
-//     ready(geoData, userData);
-//   });
+function getProjection(projectionName) {
+    const availableProjections = {
+        "albers": d3.geoAlbers,
+        "albersUsa": d3.geoAlbersUsa,
+        "mercator": d3.geoMercator
+    }
+    return availableProjections[projectionName]();
+}
+
+let sample = {
+    tables: {
+        DEFAULT: [
+            {lat: 41.346439, long: -73.084938},
+            {lat: 37.630322, long: -104.790543},
+            {lat: 40.626743, long: -103.217026},
+            {lat: 40.490429, long: -106.842384},
+            {lat: 38.025131, long: -107.67588},
+            {lat: 39.247478, long: -106.300194},
+            {lat: 38.547871, long: -106.938622},
+            {lat: 40.255306, long: -103.803062},
+            {lat: 30.193626, long: -85.683029},
+            {lat: 25.793449, long: -80.139198},
+            {lat: 38.749077, long: -105.18306},
+            {lat: 39.803318, long: -105.51683},
+            {lat: 38.444931, long: -105.24572},
+            {lat: 39.969753, long: -104.836723},
+            {lat: 34.497196, long: -91.560921},
+            {lat: 35.705608, long: -89.992729},
+            {lat: 35.618671, long: -91.271286},
+            {lat: 35.010712, long: -90.797783},
+            {lat: 33.132671, long: -91.971634},
+            {lat: 33.586617, long: -92.842979},
+            {lat: 35.934574, long: -89.92617},
+            {lat: 35.67897, long: -109.067413},
+            {lat: 33.395844, long: -110.793739},
+            {lat: 61.600803, long: -149.125259},
+            {lat: 32.429066, long: -85.715233},
+            {lat: 31.806484, long: -85.968628},
+            {lat: 34.650826, long: -86.088501},
+            {lat: 31.463181, long: -85.647202},
+            {lat: 43.0186, long: -88.259773},
+            {lat: 33.834263, long: -87.280708},
+            {lat: 34.361664, long: -86.305595},
+            {lat: 31.89818, long: -85.16021},
+            {lat: 31.335653, long: -85.865448},
+            {lat: 32.510178, long: -87.855392},
+            {lat: 31.025837, long: -87.506462},
+            {lat: 32.940945, long: -85.970024},
+            {lat: 33.982506, long: -118.040962},
+            {lat: 37.662937, long: -122.433014},
+        ]
+    },
+    style: {
+        projection: {value: "mercator"},
+        map: {value: "united-states"},
+        background_color: {value: "aquamarine"},
+        hexagon_size: {value: 25},
+    }
+}

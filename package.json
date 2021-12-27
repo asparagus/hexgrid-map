@@ -4,11 +4,14 @@
   "description": "Data studio visualization for a hexgrid map",
   "main": "hexgrid-map.js",
   "scripts": {
-    "clean": "rm -f main.js; rm -f bundle.js",
+    "clean": "rm -f main.js; rm -f bundle.js; rm -f maps.js; rm -f maps/*.geojson",
+    "premap": "for geo in $npm_package_config_maps; do curl -LJ0 \"https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/${geo}.geojson\" > \"maps/${geo}.geojson\";done && echo \"Premap finished!\"",
+    "map": "echo \"// Global definition\nvar maps = {};\" > maps.js && for file in maps/*.geojson; do city=$(echo \"$file\" | cut -d'/' -f 2 | cut -d'.' -f 1) && (echo \"maps['$city'] = \"; cat \"$file\"; echo) >> maps.js; done && echo \"Map finished!\"",
     "prebuild": "(cat node_modules/@google/dscc/_bundles/dscc.min.js; echo) > bundle.js && for f in simple-statistics d3-hexgrid d3; do (cat \"node_modules/${f}/dist/${f}.min.js\"; echo) >> bundle.js; done && echo \"Prebuild finished!\"",
-    "build": "(cat bundle.js; echo; cat src/hexgrid-map.js) > main.js && echo \"Build finished!\"",
-    "upload": "gsutil cp -a public-read src/* gs://hexgrid-map-dev && gsutil cp -a public-read main.js gs://hexgrid-map-dev && gsutil cp -a public-read src/manifest.json gs://hexgrid-map-dev",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "(cat bundle.js; echo; cat src/hexgrid-map.js; echo; cat maps.js) > main.js && echo \"Build finished!\"",
+    "upload": "gsutil cp -a public-read src/* $npm_package_config_gcsLocation && gsutil cp -a public-read main.js $npm_package_config_gcsLocation && gsutil cp -a public-read src/manifest.json $npm_package_config_gcsLocation",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "check-env": "node -e 'console.log(process.env)' | grep npm"
   },
   "repository": {
     "type": "git",
@@ -37,5 +40,9 @@
   },
   "devDependencies": {
     "browserify": "^17.0.0"
+  },
+  "config": {
+    "gcsLocation": "gs://hexgrid-map-dev",
+    "maps": "united-states"
   }
 }
