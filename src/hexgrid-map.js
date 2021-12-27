@@ -109,8 +109,15 @@ function update(data) {
       .attr("x", hex => hex.x)
       .attr("y", hex => hex.y)
       .attr("color", hex => colorize(aggregation(hex.map(x => +x.metric))))
-      .attr("hexagon", hexagon)
-      .attr("size", dimensions.hexagonRadius);
+      .attr("hexagon", hexagon);
+
+    dataBinding
+      .attr("x", hex => hex.x)
+      .attr("y", hex => hex.y)
+      .attr("color", hex => colorize(aggregation(hex.map(x => +x.metric))))
+      .attr("hexagon", hexagon);
+
+    dataBinding.exit().remove();
 }
 
 function draw() {
@@ -118,7 +125,8 @@ function draw() {
         return;
     }
     // Repaint background
-    window.viz.context.fillRect(0, 0, dscc.getWidth(), dscc.getHeight());
+    const pr = window.devicePixelRatio || 1;
+    window.viz.context.fillRect(0, 0, dscc.getWidth() * pr, dscc.getHeight() * pr);
     window.viz.context.fill();
 
     // Paint hexagons
