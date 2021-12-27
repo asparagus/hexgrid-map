@@ -1,10 +1,36 @@
-function drawViz(data) {
-    // Size
-    const height = dscc.getHeight();
-    const width = dscc.getWidth();
+class Visualization {
 
-    // Data
-    const pointData = data.tables.DEFAULT;
+    chart;
+    context;
+    dataContainer;
+
+    constructor(baseSelector) {
+        this.baseSelector = baseSelector;
+        this.setup();
+    }
+
+    setup() {
+        const base = d3.select(this.baseSelector);
+
+        const chart = base.append("canvas");
+        const context = chart.node().getContext("2d");
+
+        // Create an in memory only element of type 'custom'
+        const detachedContainer = document.createElement("custom");
+
+        // Create a d3 selection for the detached container. We won't
+        // actually be attaching it to the DOM.
+        const dataContainer = d3.select(detachedContainer);
+        this.chart = chart;
+        this.context = context;
+        this.dataContainer = dataContainer;
+    }
+}
+
+function update(data) {
+    if (window.viz === undefined) {
+        window.viz = new Visualization("body");
+    }
 
     // Options
     const projectionName = data.style.projection.value;
@@ -14,55 +40,42 @@ function drawViz(data) {
     const mapColor = data.style.map_color.value.color;
     const colorScaleName = data.style.colorscale.value;
     const invertedColorScale = data.style.inverted_colorscale.value;
+    const metricAggregationName = data.style.aggregation.value;
 
-    let aggregation;
-    let count = (arr) => arr.length > 0 ? arr.length : undefined;
-    let sum = (arr) => arr.length > 0 ? arr.reduce((a, b) => a + b, 0) : undefined;
-    let avg = (arr) => arr.length > 0 ? sum(arr) / count(arr) : undefined;
-    switch(data.style.aggregation.value) {
-        case "sum":
-            aggregation = sum;
-            break;
-        case "avg":
-            aggregation = avg;
-            break;
-        default: // count
-            aggregation = count;
-            break;
-    }
-    const geo = getMapGeoJson(map);
-    const projection = getProjection(projectionName).fitSize([width, height], geo);
     const colorScale = getColorScale(colorScaleName, invertedColorScale);
-    const colors = {scale: colorScale, background: backgroundColor, map: mapColor};
-    const dimensions = {width: width, height: height, hexagon: hexagonSize};
-    draw(geo, pointData, aggregation, projection, dimensions, colors);
-}
-
-function draw(geo, pointData, aggregation, projection, dimensions, colors) {
-    // Some set up.
-    const pr = window.devicePixelRatio || 1;
-    if (document.querySelector("canvas")) {
-        let oldCanvas = document.querySelector("canvas");
-        oldCanvas.parentNode.removeChild(oldCanvas);
-    }
+    const colors = {
+        scale: colorScale,
+        background: backgroundColor,
+        map: mapColor
+    };
+    const count = (arr) => arr.length > 0 ? arr.length : undefined;
+    const sum = (arr) => arr.length > 0 ? arr.reduce((a, b) => a + b, 0) : undefined;
+    const avg = (arr) => arr.length > 0 ? sum(arr) / count(arr) : undefined;
+    const aggregation = {"count": count, "sum": sum, "avg": avg}[metricAggregationName];
+    const dimensions = {
+        width: dscc.getWidth(),
+        height: dscc.getHeight(),
+        hexagonRadius: hexagonSize,
+        pixelRatio: window.devicePixelRatio || 1
+    };
+    const geo = getMapGeoJson(map);
+    const projection = getProjection(projectionName).fitSize([dimensions.width, dimensions.height], geo);
 
     // Crisp canvas and context.
-    const canvas = d3.select("body")
-      .append("canvas")
-      .attr("width", dimensions.width * pr)
-      .attr("height", dimensions.height * pr)
+    window.viz.chart
+      .attr("width", dimensions.width * dimensions.pixelRatio)
+      .attr("height", dimensions.height * dimensions.pixelRatio)
       .style("width", `${dimensions.width}px`);
-    const context = canvas.node().getContext("2d");
-    context.scale(pr, pr);
+    window.viz.context.scale(dimensions.pixelRatio, dimensions.pixelRatio);
+    window.viz.context.fillStyle = colors.background;
 
-    // Background color
-    context.fillStyle = colors.background;
-    context.fillRect(0, 0, dimensions.width, dimensions.height);
+    // Data
+    const pointData = data.tables.DEFAULT;
 
     // Projection and path.
     const geoPath = d3.geoPath()
       .projection(projection)
-      .context(context);
+      .context(window.viz.context);
 
     // Hexgrid generator.
     const hexgrid = d3.hexgrid()
@@ -70,36 +83,53 @@ function draw(geo, pointData, aggregation, projection, dimensions, colors) {
       .geography(geo)
       .projection(projection)
       .pathGenerator(geoPath)
-      .hexRadius(dimensions.hexagon);
+      .hexRadius(dimensions.hexagonRadius);
 
     // Hexgrid instanace.
     const hex = hexgrid(pointData, ["metric"]);
+    const hexagon = hex.hexagon();
 
-    // Colour scale.
-    const values = hex.grid.layout
+    // Metric coloring
+    const aggregatedValues = hex.grid.layout
       .map(arr => arr.map(x => +x.metric))
-      .map(aggregation)
-      .filter(x => x !== undefined);
-    const maxValue = values.reduce((a, b) => Math.max(a, b), -Infinity);
-    const minValue = values.reduce((a, b) => Math.min(a, b), Infinity);
-    function standardize(val) {
-        return val === undefined ? undefined : (val - minValue) / (maxValue - minValue);
-    }
-    function colorize(val) {
-        let standardizedVal = standardize(val);
-        let outputColor = val === undefined ? colors.map : colors.scale(standardizedVal);
-        return outputColor;
-    }
+      .map(aggregation);
+    const standardize = d3.scaleLinear()
+      .domain(d3.extent(aggregatedValues))
+      .range([0, 1]);
+    const colorize = val => val === undefined ? colors.map : colors.scale(standardize(val));
 
-    // Draw prep.
-    const hexagon = new Path2D(hex.hexagon());
-    // Draw.
-    hex.grid.layout.forEach(hex => {
-        context.save();
-        context.translate(hex.x, hex.y);
-        context.fillStyle = colorize(aggregation(hex.map(x => +x.metric)));
-        context.fill(hexagon);
-        context.restore();
+    var dataBinding = window.viz.dataContainer.selectAll("custom.hex")
+      .data(hex.grid.layout, function(d) { return d; });
+
+    // for new elements, create a 'custom' dom node, of class hex
+    // with the appropriate rect attributes
+    dataBinding.enter()
+      .append("custom")
+      .classed("hex", true)
+      .attr("x", hex => hex.x)
+      .attr("y", hex => hex.y)
+      .attr("color", hex => colorize(aggregation(hex.map(x => +x.metric))))
+      .attr("hexagon", hexagon)
+      .attr("size", dimensions.hexagonRadius);
+}
+
+function draw() {
+    if (window.viz === undefined) {
+        return;
+    }
+    // Repaint background
+    window.viz.context.fillRect(0, 0, dscc.getWidth(), dscc.getHeight());
+    window.viz.context.fill();
+
+    // Paint hexagons
+    var elements = window.viz.dataContainer.selectAll("custom.hex");
+    elements.each(function(d) {
+        var hex = d3.select(this);
+        window.viz.context.save();
+        window.viz.context.translate(hex.attr("x"), hex.attr("y"));
+        window.viz.context.fillStyle = hex.attr("color");
+        window.viz.context.fill(new Path2D(hex.attr("hexagon")));
+        window.viz.context.restore();
     });
 }
 
@@ -121,7 +151,6 @@ function getMapGeoJson(mapName) {
 function getProjection(projectionName) {
     const availableProjections = {
         "albers": d3.geoAlbers,
-        "albersUsa": d3.geoAlbersUsa,
         "mercator": d3.geoMercator
     }
     return availableProjections[projectionName]();
@@ -186,4 +215,5 @@ let sample = {
     }
 }
 
-dscc.subscribeToData(drawViz, { transform: dscc.objectTransform });
+d3.timer(draw);
+dscc.subscribeToData(update, { transform: dscc.objectTransform });

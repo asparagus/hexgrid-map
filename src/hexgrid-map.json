@@ -69,10 +69,6 @@
               {
                 "label": "Albers",
                 "value": "albers"
-              },
-              {
-                "label": "Albers USA",
-                "value": "albersUsa"
               }
             ]
           }
