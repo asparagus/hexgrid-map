@@ -80,8 +80,28 @@
       },
       {
         "id": "hexagons",
-        "label": "Hexagons",
+        "label": "Hexagon Bins",
         "elements": [
+          {
+            "type": "SELECT_SINGLE",
+            "id": "aggregation",
+            "label": "Aggregation",
+            "defaultValue": "count",
+            "options": [
+              {
+                "label": "Count",
+                "value": "count"
+              },
+              {
+                "label": "Average",
+                "value": "avg"
+              },
+              {
+                "label": "Sum",
+                "value": "sum"
+              }
+            ]
+          },
           {
             "type": "INTERVAL",
             "id": "hexagon_size",
@@ -99,8 +119,178 @@
             "id": "background_color",
             "label": "Background Color",
             "defaultValue": {
-              "color": "#0C2648"
+              "color": "#FFFFFF"
             }
+          },
+          {
+            "type": "FILL_COLOR",
+            "id": "map_color",
+            "label": "Map Color",
+            "defaultValue": {
+              "color": "#333333"
+            }
+          },
+          {
+            "type": "SELECT_SINGLE",
+            "id": "colorscale",
+            "label": "Color Scale",
+            "defaultValue": "Greens",
+            "options": [
+              {
+                "label": "BrBG",
+                "value": "BrBG"
+              },
+              {
+                "label": "PRGn",
+                "value": "PRGn"
+              },
+              {
+                "label": "PiYG",
+                "value": "PiYG"
+              },
+              {
+                "label": "PuOr",
+                "value": "PuOr"
+              },
+              {
+                "label": "RdBu",
+                "value": "RdBu"
+              },
+              {
+                "label": "RdGy",
+                "value": "RdGy"
+              },
+              {
+                "label": "RdYlBu",
+                "value": "RdYlBu"
+              },
+              {
+                "label": "RdYlGn",
+                "value": "RdYlGn"
+              },
+              {
+                "label": "Spectral",
+                "value": "Spectral"
+              },
+              {
+                "label": "Blues",
+                "value": "Blues"
+              },
+              {
+                "label": "Greens",
+                "value": "Greens"
+              },
+              {
+                "label": "Greys",
+                "value": "Greys"
+              },
+              {
+                "label": "Oranges",
+                "value": "Oranges"
+              },
+              {
+                "label": "Purples",
+                "value": "Purples"
+              },
+              {
+                "label": "Reds",
+                "value": "Reds"
+              },
+              {
+                "label": "Turbo",
+                "value": "Turbo"
+              },
+              {
+                "label": "Viridis",
+                "value": "Viridis"
+              },
+              {
+                "label": "Inferno",
+                "value": "Inferno"
+              },
+              {
+                "label": "Plasma",
+                "value": "Plasma"
+              },
+              {
+                "label": "Cividis",
+                "value": "Cividis"
+              },
+              {
+                "label": "Warm",
+                "value": "Warm"
+              },
+              {
+                "label": "Cool",
+                "value": "Cool"
+              },
+              {
+                "label": "CubehelixDefault",
+                "value": "CubehelixDefault"
+              },
+              {
+                "label": "BuGn",
+                "value": "BuGn"
+              },
+              {
+                "label": "BuPu",
+                "value": "BuPu"
+              },
+              {
+                "label": "GnBu",
+                "value": "GnBu"
+              },
+              {
+                "label": "OrRd",
+                "value": "OrRd"
+              },
+              {
+                "label": "PuBuGn",
+                "value": "PuBuGn"
+              },
+              {
+                "label": "PuBu",
+                "value": "PuBu"
+              },
+              {
+                "label": "PuRd",
+                "value": "PuRd"
+              },
+              {
+                "label": "RdPu",
+                "value": "RdPu"
+              },
+              {
+                "label": "YlGnBu",
+                "value": "YlGnBu"
+              },
+              {
+                "label": "YlGn",
+                "value": "YlGn"
+              },
+              {
+                "label": "YlOrBr",
+                "value": "YlOrBr"
+              },
+              {
+                "label": "YlOrRd",
+                "value": "YlOrRd"
+              },
+              {
+                "label": "Rainbow",
+                "value": "Rainbow"
+              },
+              {
+                "label": "Sinebow",
+                "value": "Sinebow"
+              }
+            ]
+          },
+          {
+            "type": "CHECKBOX",
+            "id": "inverted_colorscale",
+            "label": "Invert Color Scale",
+            "defaultValue": false
           }
         ]
       }
