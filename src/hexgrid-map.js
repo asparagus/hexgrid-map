@@ -10,7 +10,7 @@ function drawViz(data) {
     const projectionName = data.style.projection.value;
     const map = data.style.map.value;
     const hexagonSize = data.style.hexagon_size.value;
-    const backgroundColor = data.style.background_color.value;
+    const backgroundColor = data.style.background_color.value.color;
 
     const geo = getMapGeoJson(map);
     draw(geo, pointData, width, height, projectionName, hexagonSize, backgroundColor);
@@ -19,14 +19,18 @@ function drawViz(data) {
 function draw(geo, pointData, width, height, projectionName, hexagonSize, backgroundColor) {
     // Some set up.
     const pr = window.devicePixelRatio || 1;
+    if (document.querySelector("canvas")) {
+        let oldCanvas = document.querySelector("canvas");
+        oldCanvas.parentNode.removeChild(oldCanvas);
+    }
 
     // Crisp canvas and context.
-    const canvas = d3.select('body')
-      .append('canvas')
-      .attr('width', width * pr)
-      .attr('height', height * pr)
-      .style('width', `${width}px`);
-    const context = canvas.node().getContext('2d');
+    const canvas = d3.select("body")
+      .append("canvas")
+      .attr("width", width * pr)
+      .attr("height", height * pr)
+      .style("width", `${width}px`);
+    const context = canvas.node().getContext("2d");
     context.scale(pr, pr);
 
     // Background color
@@ -46,9 +50,9 @@ function draw(geo, pointData, width, height, projectionName, hexagonSize, backgr
 
     // // Prep user data.
     pointData.forEach(site => {
-      const coords = projection([+site.lng, +site.lat]);
-      site.x = coords[0];
-      site.y = coords[1];
+        const coords = projection([+site.lng, +site.lat]);
+        site.x = coords[0];
+        site.y = coords[1];
     });
 
     // Hexgrid generator.
@@ -71,18 +75,18 @@ function draw(geo, pointData, width, height, projectionName, hexagonSize, backgr
     const colour = d3
       .scaleThreshold()
       .domain(ckBreaks)
-      .range(['#293e5a', '#5e6d7c', '#929b9f', '#c7cac1', '#fbf8e3']);
+      .range(["#293e5a", "#5e6d7c", "#929b9f", "#c7cac1", "#fbf8e3"]);
 
     // Draw prep.
     const hexagon = new Path2D(hex.hexagon());
 
     // Draw.
     hex.grid.layout.forEach(hex => {
-      context.save();
-      context.translate(hex.x, hex.y);
-      context.fillStyle = colour(hex.datapointsWt);
-      context.fill(hexagon);
-      context.restore();
+        context.save();
+        context.translate(hex.x, hex.y);
+        context.fillStyle = colour(hex.datapointsWt);
+        context.fill(hexagon);
+        context.restore();
     });
 }
 
@@ -163,7 +167,11 @@ let sample = {
     style: {
         projection: {value: "mercator"},
         map: {value: "united-states"},
-        background_color: {value: "aquamarine"},
+        background_color: {
+            value: {color: "aquamarine"}
+        },
         hexagon_size: {value: 25},
     }
 }
+
+dscc.subscribeToData(drawViz, { transform: dscc.objectTransform });
