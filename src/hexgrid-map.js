@@ -31,13 +31,14 @@ function drawViz(data) {
             break;
     }
     const geo = getMapGeoJson(map);
+    const projection = getProjection(projectionName).fitSize([width, height], geo);
     const colorScale = getColorScale(colorScaleName, invertedColorScale);
     const colors = {scale: colorScale, background: backgroundColor, map: mapColor};
     const dimensions = {width: width, height: height, hexagon: hexagonSize};
-    draw(geo, pointData, aggregation, projectionName, dimensions, colors);
+    draw(geo, pointData, aggregation, projection, dimensions, colors);
 }
 
-function draw(geo, pointData, aggregation, projectionName, dimensions, colors) {
+function draw(geo, pointData, aggregation, projection, dimensions, colors) {
     // Some set up.
     const pr = window.devicePixelRatio || 1;
     if (document.querySelector("canvas")) {
@@ -59,7 +60,6 @@ function draw(geo, pointData, aggregation, projectionName, dimensions, colors) {
     context.fillRect(0, 0, dimensions.width, dimensions.height);
 
     // Projection and path.
-    const projection = getProjection(projectionName).fitSize([dimensions.width, dimensions.height], geo);
     const geoPath = d3.geoPath()
       .projection(projection)
       .context(context);
