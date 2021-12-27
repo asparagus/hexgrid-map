@@ -60,15 +60,19 @@
             "type": "SELECT_SINGLE",
             "id": "projection",
             "label": "Projection",
-            "defaultValue": "albers",
+            "defaultValue": "mercator",
             "options": [
+              {
+                "label": "Mercator",
+                "value": "mercator"
+              },
               {
                 "label": "Albers",
                 "value": "albers"
               },
               {
-                "label": "Mercator",
-                "value": "mercator"
+                "label": "Albers USA",
+                "value": "albersUsa"
               }
             ]
           }
