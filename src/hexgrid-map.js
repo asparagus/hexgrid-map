@@ -21,7 +21,8 @@ function draw(geo, pointData, width, height, projectionName, hexagonSize, backgr
     const pr = window.devicePixelRatio || 1;
 
     // Crisp canvas and context.
-    const canvas = d3.select('canvas')
+    const canvas = d3.select('body')
+      .append('canvas')
       .attr('width', width * pr)
       .attr('height', height * pr)
       .style('width', `${width}px`);
