@@ -137,7 +137,6 @@ function update(data) {
         window.viz = new Visualization("body");
     }
 
-    console.log(data);
     // Options
     const projectionName = data.style.projection.value;
     const map = data.style.map.value;
