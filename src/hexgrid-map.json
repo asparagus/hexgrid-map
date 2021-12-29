@@ -108,7 +108,7 @@
       },
       {
         "id": "colors",
-        "label": "Colors",
+        "label": "Map Colors",
         "elements": [
           {
             "type": "FILL_COLOR",
@@ -287,6 +287,45 @@
             "id": "inverted_colorscale",
             "label": "Invert Color Scale",
             "defaultValue": false
+          }
+        ]
+      },
+      {
+        "id": "tooltip",
+        "label": "Tooltip",
+        "elements": [
+          {
+            "type": "FILL_COLOR",
+            "id": "tooltip_fill_color",
+            "label": "Fill color",
+            "defaultValue": {
+              "color": "#dcdcdc"
+            }
+          },
+          {
+            "type": "FONT_COLOR",
+            "id": "tooltip_font_color",
+            "label": "Font color",
+            "defaultValue": {
+              "color": "#333333"
+            }
+          },
+          {
+            "type": "FONT_SIZE",
+            "id": "tooltip_font_size",
+            "label": "Font size"
+          },
+          {
+            "type": "FONT_FAMILY",
+            "id": "tooltip_font_family",
+            "label": "Font family",
+            "defaultValue": "Roboto"
+          },
+          {
+            "type": "CHECKBOX",
+            "id": "tooltip_display_count",
+            "label": "Display Record Count",
+            "defaultValue": true
           }
         ]
       }

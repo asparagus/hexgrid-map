@@ -1,11 +1,21 @@
+canvas {
+  cursor: pointer;
+}
+
 #tooltip {
   position: absolute;
   display: block;
   overflow: hidden;
 
-  padding: 10px;
-  border-radius: 4px;
+  padding: 5px 10px;
+  border-radius: 10px;
+  border-style: solid;
+  border-color: black;
+  border-width: 2px;
+  min-width: 80px;
+}
 
-  background-color: rgb(220, 220, 220);
-  border-color: rgb(60, 60, 60);
+#tooltip-metric-value,
+#tooltip-count-value {
+  font-weight: bold;
 }

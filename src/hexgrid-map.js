@@ -33,8 +33,7 @@ class Visualization {
 
     setup() {
         const base = d3.select(this.baseSelector);
-        const ttip = base.append("div")
-          .attr("id", "tooltip");
+        const ttip = buildTooltip(base);
         const canvas = base.append("canvas");
         const context = canvas.node().getContext("2d");
         let index = [];
@@ -57,7 +56,8 @@ class Visualization {
             let node = select(mouseX, mouseY);
             tooltip(mouseX, mouseY + 15, node);
         };
-        canvas.node().addEventListener("click", handler);
+        canvas.node().addEventListener("click", handler, true);
+        canvas.node().addEventListener("mouseleave", e => tooltip(null, null, undefined), true);
     }
 }
 
@@ -86,15 +86,49 @@ function select(mouseX, mouseY) {
     return closestDistance < closest.radius ? closest : undefined;
 }
 
+function buildTooltip(base) {
+    let container = base.append("div")
+      .attr("id", "tooltip")
+      .style("display", "none");
+    container.append("div")
+      .attr("id", "tooltip-metric-name");
+    container.append("div")
+      .attr("id", "tooltip-metric-value");
+    let countContainer = container.append("div")
+      .attr("id", "tooltip-count-container");
+    countContainer.append("hr")
+    countContainer.append("div")
+      .attr("id", "tooltip-count-name")
+      .text("Record count:");
+    countContainer.append("div")
+      .attr("id", "tooltip-count-value");
+    return container;
+}
+
 function tooltip(x, y, node) {
+    let ttip = d3.select("#tooltip");
     if (node === undefined || node.metric === undefined) {
-        viz.tooltip.style("display", "none");
+        d3.select("#tooltip").style("display", "none");
     } else {
-        viz.tooltip
-          .text("Metric: " + node.metric)
+        let metricName = ttip.attr("metric") || "Metric";
+        let showCount = Number(ttip.attr("count"));
+        ttip
           .style("display", "block")
           .style("left", x + "px")
           .style("top", y + "px");
+        d3.select("#tooltip-metric-name")
+          .text(metricName);
+        d3.select("#tooltip-metric-value")
+          .text(node.metric.toFixed(2));
+        if (showCount) {
+            d3.select("#tooltip-count-container")
+              .style("display", "block");
+            d3.select("#tooltip-count-value")
+              .text(node.count);
+        } else {
+            d3.select("#tooltip-count-container")
+              .style("display", "none");
+        }
     }
 }
 
@@ -102,9 +136,8 @@ function update(data) {
     if (window.viz === undefined) {
         window.viz = new Visualization("body");
     }
-    console.log(data);
-    console.log(data.fields);
 
+    console.log(data);
     // Options
     const projectionName = data.style.projection.value;
     const map = data.style.map.value;
@@ -113,7 +146,13 @@ function update(data) {
     const mapColor = data.style.map_color.value.color;
     const colorScaleName = data.style.colorscale.value;
     const invertedColorScale = data.style.inverted_colorscale.value;
+    const metricName = data.fields.metric[0].name;
     const metricAggregationName = data.style.aggregation.value;
+    const tooltipFillColor = data.style.tooltip_fill_color.value.color;
+    const tooltipFontColor = data.style.tooltip_font_color.value.color;
+    const tooltipFontSize = data.style.tooltip_font_size.value;
+    const tooltipFontFamily = data.style.tooltip_font_family.value;
+    const tooltipDisplayCount = data.style.tooltip_display_count.value;
 
     const colorScale = getColorScale(colorScaleName, invertedColorScale);
     const colors = {
@@ -135,11 +174,20 @@ function update(data) {
     const projection = getProjection(projectionName).fitSize([dimensions.width, dimensions.height], geo);
 
     window.viz.canvas
+      .attr("aggregation", metricAggregationName)
       .attr("width", dimensions.width * dimensions.pixelRatio)
       .attr("height", dimensions.height * dimensions.pixelRatio)
       .style("width", `${dimensions.width}px`);
     window.viz.context.scale(dimensions.pixelRatio, dimensions.pixelRatio);
     window.viz.context.fillStyle = colors.background;
+
+    window.viz.tooltip
+      .attr("metric", metricName)
+      .attr("count", Number(tooltipDisplayCount))
+      .style("color", tooltipFontColor)
+      .style("background-color", tooltipFillColor)
+      .style("font-size", `${tooltipFontSize}px`)
+      .style("font-family", tooltipFontFamily);
 
     // Data
     const pointData = data.tables.DEFAULT;
@@ -161,21 +209,27 @@ function update(data) {
     const hex = hexgrid(pointData, ["metric"]);
     const hexagon = hex.hexagon();
     window.viz.index = buildIndex(hex.grid.layout);
-    hex.grid.layout.forEach(arr => arr.radius = dimensions.hexagonRadius);
-    hex.grid.layout.forEach(arr => arr.metric = aggregation(arr.map(x => +x.metric)));
+    // Aggregation & standardization
+    hex.grid.layout.forEach(arr => {
+        arr.radius = dimensions.hexagonRadius;
+        arr.count = arr.length;
+        arr.metric = aggregation(arr.map(x => +x.metric));
+    });
 
     // Metric coloring
     const aggregatedValues = hex.grid.layout.map(arr => arr.metric);
     const standardize = d3.scaleLinear()
       .domain(d3.extent(aggregatedValues))
       .range([0, 1]);
+
+    // Coloring
     const colorize = val => val === undefined ? colors.map : colors.scale(standardize(val));
 
     let dataBinding = window.viz.dataContainer.selectAll("custom.hex")
       .data(hex.grid.layout, function(d) { return d; });
 
-    // for new elements, create a 'custom' dom node, of class hex
-    // with the appropriate rect attributes
+    // For new elements, create a 'custom' dom node, of class hex
+    // with the appropriate attributes
     dataBinding.enter()
       .append("custom")
       .classed("hex", true)
@@ -184,6 +238,7 @@ function update(data) {
       .attr("color", hex => colorize(hex.metric))
       .attr("hexagon", hexagon);
 
+    // When updating, adjust everything
     dataBinding
       .attr("x", hex => hex.x)
       .attr("y", hex => hex.y)
@@ -256,6 +311,9 @@ function getProjection(projectionName) {
 }
 
 let sample = {
+    fields: {
+        metric: [{name: "l2_3s"}]
+    },
     tables: {
         DEFAULT: [
             {metric: 1, lat: 41.346439, long: -73.084938},
@@ -310,7 +368,16 @@ let sample = {
         hexagon_size: {value: 25},
         aggregation: {value: "sum"},
         colorscale: {value: "YlOrBr"},
-        inverted_colorscale: {value: false}
+        inverted_colorscale: {value: false},
+        tooltip_font_color: {
+            value: {color: "black"}
+        },
+        tooltip_font_size: {value: 16},
+        tooltip_font_family: {value: "Roboto"},
+        tooltip_fill_color: {
+            value: {color: "#dcdcdc"}
+        },
+        tooltip_display_count: {value: false}
     }
 }
 
