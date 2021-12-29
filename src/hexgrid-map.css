@@ -27,6 +27,10 @@ canvas {
   width: 2px;
 
   bottom: -15px;
+  /**
+   * It seems this value should be 63 for it to work better locally,
+   * but 57 works better in Data Studio
+   */
   left: 57px;
 
   background-color: black;
