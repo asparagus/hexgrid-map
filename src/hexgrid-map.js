@@ -119,7 +119,7 @@ function tooltip(x, y, node) {
         d3.select("#tooltip-metric-name")
           .text(metricName);
         d3.select("#tooltip-metric-value")
-          .text(node.metric.toFixed(2));
+          .text(+node.metric.toFixed(2));
         if (showCount) {
             d3.select("#tooltip-count-container")
               .style("display", "block");

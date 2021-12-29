@@ -299,7 +299,7 @@
             "id": "tooltip_fill_color",
             "label": "Fill color",
             "defaultValue": {
-              "color": "#dcdcdc"
+              "color": "#efefef"
             }
           },
           {
