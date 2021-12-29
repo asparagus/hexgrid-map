@@ -21,13 +21,15 @@ canvas {
 
 #tooltip::after {
   content: "";
-  position: absolute;
   display: block;
+  position: absolute;
+  height: 15px;
   width: 2px;
-  height: 20px;
+
+  bottom: -15px;
+  left: 57px;
+
   background-color: black;
-  bottom: -20px;
-  left: 63px;
 }
 
 #tooltip-metric-value,
