@@ -5,14 +5,29 @@ canvas {
 #tooltip {
   position: absolute;
   display: block;
-  overflow: hidden;
+  box-sizing: border-box;
 
   padding: 5px 10px;
   border-radius: 10px;
   border-style: solid;
   border-color: black;
   border-width: 2px;
-  min-width: 80px;
+  width: 120px;
+}
+
+#tooltip div {
+  overflow: hidden;
+}
+
+#tooltip::after {
+  content: "";
+  position: absolute;
+  display: block;
+  width: 2px;
+  height: 20px;
+  background-color: black;
+  bottom: -20px;
+  left: 63px;
 }
 
 #tooltip-metric-value,

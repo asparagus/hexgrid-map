@@ -56,7 +56,7 @@ class Visualization {
             let node = select(mouseX, mouseY);
             tooltip(mouseX, mouseY + 15, node);
         };
-        canvas.node().addEventListener("click", handler, true);
+        canvas.node().addEventListener("mousemove", handler, true);
         canvas.node().addEventListener("mouseleave", e => tooltip(null, null, undefined), true);
     }
 }
@@ -112,19 +112,22 @@ function tooltip(x, y, node) {
     } else {
         let metricName = ttip.attr("metric") || "Metric";
         let showCount = Number(ttip.attr("count"));
+        let height = window.viz.canvas.attr("height") / 2;
+        let tooltipX = x - 60;
+        let tooltipY = height - y + 30;
         ttip
           .style("display", "block")
-          .style("left", x + "px")
-          .style("top", y + "px");
+          .style("left", `${tooltipX}px`)
+          .style("bottom", `${tooltipY}px`);
         d3.select("#tooltip-metric-name")
           .text(metricName);
         d3.select("#tooltip-metric-value")
-          .text(+node.metric.toFixed(2));
+          .text((+node.metric.toFixed(2)).toLocaleString('en', {useGrouping: true}));
         if (showCount) {
             d3.select("#tooltip-count-container")
               .style("display", "block");
             d3.select("#tooltip-count-value")
-              .text(node.count);
+              .text(node.count.toLocaleString('en', {useGrouping: true}));
         } else {
             d3.select("#tooltip-count-container")
               .style("display", "none");
@@ -176,10 +179,9 @@ function update(data) {
       .attr("aggregation", metricAggregationName)
       .attr("width", dimensions.width * dimensions.pixelRatio)
       .attr("height", dimensions.height * dimensions.pixelRatio)
-      .style("width", `${dimensions.width}px`);
+      .style("width", `${dimensions.width}px`)
+      .attr("background-color", colors.background);
     window.viz.context.scale(dimensions.pixelRatio, dimensions.pixelRatio);
-    window.viz.context.fillStyle = colors.background;
-
     window.viz.tooltip
       .attr("metric", metricName)
       .attr("count", Number(tooltipDisplayCount))
@@ -207,13 +209,14 @@ function update(data) {
     // Hexgrid instance.
     const hex = hexgrid(pointData, ["metric"]);
     const hexagon = hex.hexagon();
-    window.viz.index = buildIndex(hex.grid.layout);
     // Aggregation & standardization
     hex.grid.layout.forEach(arr => {
         arr.radius = dimensions.hexagonRadius;
         arr.count = arr.length;
         arr.metric = aggregation(arr.map(x => +x.metric));
     });
+    // Indexing
+    window.viz.index = buildIndex(hex.grid.layout);
 
     // Metric coloring
     const aggregatedValues = hex.grid.layout.map(arr => arr.metric);
@@ -258,10 +261,10 @@ function buildIndex(hexagons) {
     });
     const compareFn = fn => ((a, b) => fn(a) - fn(b));
     Object.keys(indexByY).forEach(y => {
-        indexByY[y].sort(compareFn(el => el.x));
+        indexByY[y] = indexByY[y].filter(el => el.metric !== undefined).sort(compareFn(el => el.x));
     })
     let index = Object.values(indexByY);
-    index.sort(compareFn(el => el[0].y));
+    index = index.filter(el => el.length > 0).sort(compareFn(el => el[0].y));
     return index;
 }
 
@@ -271,6 +274,8 @@ function draw() {
     }
     // Repaint background
     const pr = window.devicePixelRatio || 1;
+    const backgroundColor = window.viz.canvas.attr("background-color");
+    window.viz.context.fillStyle = backgroundColor;
     window.viz.context.fillRect(0, 0, dscc.getWidth() * pr, dscc.getHeight() * pr);
     window.viz.context.fill();
 
@@ -287,7 +292,7 @@ function draw() {
 }
 
 function getColorScale(colorScaleName, invertedColorScale) {
-    let colorScale = d3["interpolate" + colorScaleName];
+    let colorScale = d3[`interpolate${colorScaleName}`];
     if (invertedColorScale) {
         return value => colorScale(1.0 - value)
     }
@@ -371,8 +376,8 @@ let sample = {
         tooltip_font_color: {
             value: {color: "black"}
         },
-        tooltip_font_size: {value: 16},
-        tooltip_font_family: {value: "Roboto"},
+        tooltip_font_size: {value: 14},
+        tooltip_font_family: {value: "Helvetica, Verdana, sans-serif"},
         tooltip_fill_color: {
             value: {color: "#dcdcdc"}
         },
