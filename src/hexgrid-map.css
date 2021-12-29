@@ -1,7 +1,11 @@
-#myVizTitle {
-    color: black;
-    font-size: 24px;
-    text-align: center;
-    margin: 0 auto;
-  }
-  
+#tooltip {
+  position: absolute;
+  display: block;
+  overflow: hidden;
+
+  padding: 10px;
+  border-radius: 4px;
+
+  background-color: rgb(220, 220, 220);
+  border-color: rgb(60, 60, 60);
+}

@@ -1,8 +1,30 @@
+function approxBinarySearch(array, value) {
+    let proxyIndexUpperBound = array.length;
+    let proxyIndexLowerBound = 0;
+    let proxyIndex, currentValue;
+    while (proxyIndexUpperBound > proxyIndexLowerBound) {
+        proxyIndex = Math.floor((proxyIndexLowerBound + proxyIndexUpperBound) / 2);
+        currentValue = array[proxyIndex];
+        if (currentValue < value) {
+            proxyIndexLowerBound = proxyIndex + 1;
+        } else if (currentValue > value) {
+            proxyIndexUpperBound = proxyIndex;
+        } else {
+            proxyIndexUpperBound = proxyIndex;
+            proxyIndexLowerBound = proxyIndex;
+        }
+    }
+    return proxyIndex;
+}
+
+
 class Visualization {
 
-    chart;
+    canvas;
     context;
     dataContainer;
+    tooltip;
+    index;
 
     constructor(baseSelector) {
         this.baseSelector = baseSelector;
@@ -11,9 +33,11 @@ class Visualization {
 
     setup() {
         const base = d3.select(this.baseSelector);
-
-        const chart = base.append("canvas");
-        const context = chart.node().getContext("2d");
+        const ttip = base.append("div")
+          .attr("id", "tooltip");
+        const canvas = base.append("canvas");
+        const context = canvas.node().getContext("2d");
+        let index = [];
 
         // Create an in memory only element of type 'custom'
         const detachedContainer = document.createElement("custom");
@@ -21,9 +45,56 @@ class Visualization {
         // Create a d3 selection for the detached container. We won't
         // actually be attaching it to the DOM.
         const dataContainer = d3.select(detachedContainer);
-        this.chart = chart;
+        this.canvas = canvas;
         this.context = context;
         this.dataContainer = dataContainer;
+        this.tooltip = ttip;
+        this.index = index;
+
+        const handler = function(e) {
+            let mouseX = e.layerX;
+            let mouseY = e.layerY;
+            let node = select(mouseX, mouseY);
+            tooltip(mouseX, mouseY + 15, node);
+        };
+        canvas.node().addEventListener("click", handler);
+    }
+}
+
+function select(mouseX, mouseY) {
+    let candidates = [];
+    let approximateIndexY = approxBinarySearch(viz.index.map(el => el[0].y), mouseY);
+    for (let y = approximateIndexY - 1; y <= approximateIndexY + 1 && y < viz.index.length; y++) {
+        if (y < 0) { continue; }
+        let approximateIndexX = approxBinarySearch(viz.index[y].map(el => el.x), mouseX);
+        for (let x = approximateIndexX - 1; x <= approximateIndexX + 1 && x < viz.index[y].length; x++) {
+            if (x < 0) { continue; }
+            candidates.push(viz.index[y][x]);
+        }
+    }
+    let closest = null;
+    let closestDistance = null;
+    candidates.forEach(function(d) {
+        let dx = (mouseX - d.x);
+        let dy = (mouseY - d.y);
+        let dist = Math.sqrt(dx * dx + dy * dy);
+        if (closest === null || dist < closestDistance) {
+            closest = d;
+            closestDistance = dist;
+        }
+    });
+    return closestDistance < closest.radius ? closest : undefined;
+}
+
+function tooltip(x, y, node) {
+    if (node === undefined || node.metric === undefined) {
+        viz.tooltip.style("display", "none");
+    } else {
+        viz.tooltip
+          .text("Metric: " + node.metric)
+          .style("display", "block")
+          .style("left", x + "px")
+          .style("top", y + "px");
     }
 }
 
@@ -31,6 +102,8 @@ function update(data) {
     if (window.viz === undefined) {
         window.viz = new Visualization("body");
     }
+    console.log(data);
+    console.log(data.fields);
 
     // Options
     const projectionName = data.style.projection.value;
@@ -61,8 +134,7 @@ function update(data) {
     const geo = getMapGeoJson(map);
     const projection = getProjection(projectionName).fitSize([dimensions.width, dimensions.height], geo);
 
-    // Crisp canvas and context.
-    window.viz.chart
+    window.viz.canvas
       .attr("width", dimensions.width * dimensions.pixelRatio)
       .attr("height", dimensions.height * dimensions.pixelRatio)
       .style("width", `${dimensions.width}px`);
@@ -85,20 +157,21 @@ function update(data) {
       .pathGenerator(geoPath)
       .hexRadius(dimensions.hexagonRadius);
 
-    // Hexgrid instanace.
+    // Hexgrid instance.
     const hex = hexgrid(pointData, ["metric"]);
     const hexagon = hex.hexagon();
+    window.viz.index = buildIndex(hex.grid.layout);
+    hex.grid.layout.forEach(arr => arr.radius = dimensions.hexagonRadius);
+    hex.grid.layout.forEach(arr => arr.metric = aggregation(arr.map(x => +x.metric)));
 
     // Metric coloring
-    const aggregatedValues = hex.grid.layout
-      .map(arr => arr.map(x => +x.metric))
-      .map(aggregation);
+    const aggregatedValues = hex.grid.layout.map(arr => arr.metric);
     const standardize = d3.scaleLinear()
       .domain(d3.extent(aggregatedValues))
       .range([0, 1]);
     const colorize = val => val === undefined ? colors.map : colors.scale(standardize(val));
 
-    var dataBinding = window.viz.dataContainer.selectAll("custom.hex")
+    let dataBinding = window.viz.dataContainer.selectAll("custom.hex")
       .data(hex.grid.layout, function(d) { return d; });
 
     // for new elements, create a 'custom' dom node, of class hex
@@ -108,16 +181,34 @@ function update(data) {
       .classed("hex", true)
       .attr("x", hex => hex.x)
       .attr("y", hex => hex.y)
-      .attr("color", hex => colorize(aggregation(hex.map(x => +x.metric))))
+      .attr("color", hex => colorize(hex.metric))
       .attr("hexagon", hexagon);
 
     dataBinding
       .attr("x", hex => hex.x)
       .attr("y", hex => hex.y)
-      .attr("color", hex => colorize(aggregation(hex.map(x => +x.metric))))
+      .attr("color", hex => colorize(hex.metric))
       .attr("hexagon", hexagon);
 
     dataBinding.exit().remove();
+}
+
+function buildIndex(hexagons) {
+    window.hex = hexagons;
+    let indexByY = {};
+    hexagons.forEach(hex => {
+        if (!(hex.y  in indexByY)) {
+            indexByY[hex.y] = [];
+        }
+        indexByY[hex.y].push(hex);
+    });
+    const compareFn = fn => ((a, b) => fn(a) - fn(b));
+    Object.keys(indexByY).forEach(y => {
+        indexByY[y].sort(compareFn(el => el.x));
+    })
+    let index = Object.values(indexByY);
+    index.sort(compareFn(el => el[0].y));
+    return index;
 }
 
 function draw() {
@@ -130,9 +221,9 @@ function draw() {
     window.viz.context.fill();
 
     // Paint hexagons
-    var elements = window.viz.dataContainer.selectAll("custom.hex");
+    let elements = window.viz.dataContainer.selectAll("custom.hex");
     elements.each(function(d) {
-        var hex = d3.select(this);
+        let hex = d3.select(this);
         window.viz.context.save();
         window.viz.context.translate(hex.attr("x"), hex.attr("y"));
         window.viz.context.fillStyle = hex.attr("color");
