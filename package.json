@@ -42,7 +42,6 @@
     "browserify": "^17.0.0"
   },
   "config": {
-    "gcsLocation": "gs://hexgrid-map-dev",
-    "maps": "united-states"
+    "gcsLocation": "gs://hexgrid-map-dev/master"
   }
 }

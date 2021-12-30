@@ -13,9 +13,9 @@
       "iconUrl": "https://raw.githubusercontent.com/asparagus/hexgrid-map/master/logo.jpg",
       "description": "Hexgrid Map built in d3.js",
       "resource": {
-        "js": "gs://hexgrid-map-dev/main.js",
-        "config": "gs://hexgrid-map-dev/hexgrid-map.json",
-        "css": "gs://hexgrid-map-dev/hexgrid-map.css"
+        "js": "gs://hexgrid-map-dev/master/main.js",
+        "config": "gs://hexgrid-map-dev/master/hexgrid-map.json",
+        "css": "gs://hexgrid-map-dev/master/hexgrid-map.css"
       }
     }]
   }
