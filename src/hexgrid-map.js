@@ -20,6 +20,7 @@ function approxBinarySearch(array, value) {
 
 class Visualization {
 
+    base;
     canvas;
     context;
     dataContainer;
@@ -27,15 +28,15 @@ class Visualization {
     index;
 
     constructor(baseSelector) {
-        this.baseSelector = baseSelector;
+        this.base = d3.select(baseSelector);
         this.setup();
     }
 
     setup() {
-        const base = d3.select(this.baseSelector);
-        const ttip = buildTooltip(base);
-        const canvas = base.append("canvas");
+        const canvas = this.base.append("canvas");
         const context = canvas.node().getContext("2d");
+        const ttip = buildTooltip(this.base);
+        const lgnd = buildLegend(this.base);
         let index = [];
 
         // Create an in memory only element of type 'custom'
@@ -84,6 +85,39 @@ function select(mouseX, mouseY) {
         }
     });
     return closestDistance < closest.radius ? closest : undefined;
+}
+
+function buildLegend(base) {
+    let lgnd = base.append("div")
+      .attr("id", "legend")
+      .attr("direction", "horizontal");
+    lgnd.append("div")
+      .attr("id", "legend-title")
+    let lgndValues = lgnd.append("div")
+      .attr("id", "legend-values");
+    for (let i in [...Array(11).keys()]) {
+        const value = lgndValues.append("div")
+          .attr("class", "legend-value");
+        value.append("span")
+          .attr("class", "legend-number")
+          .attr("idx", i);
+        value.append("span")
+          .attr("class", "legend-color");
+    }
+    return lgnd;
+}
+
+function legend(metricName, valueScale, colorScale) {
+    d3.select("#legend-title").text(metricName);
+    let legendValues = document.getElementsByClassName("legend-value");
+    for (let i = 0; i < legendValues.length; i++) {
+        let legendNumber = legendValues[i].getElementsByClassName("legend-number")[0];
+        let legendColor = legendValues[i].getElementsByClassName("legend-color")[0];
+        let idx = legendNumber.getAttribute("idx");
+        let value = valueScale.invert(idx / 10);
+        legendNumber.innerHTML = value.toFixed(2).toLocaleString('en', {useGrouping: true});
+        legendColor.style["background-color"] = colorScale(value);
+    };
 }
 
 function buildTooltip(base) {
@@ -155,6 +189,11 @@ function update(data) {
     const tooltipFontSize = data.style.tooltip_font_size.value;
     const tooltipFontFamily = data.style.tooltip_font_family.value;
     const tooltipDisplayCount = data.style.tooltip_display_count.value;
+    const legendLocation = data.style.legend_location.value;
+    const legendFontSize = data.style.legend_font_size.value;
+    const legendFontColor = data.style.legend_font_color.value.color;
+    const legendFontFamily = data.style.legend_font_family.value;
+    const legendDisplay = data.style.legend_display.value;
 
     const colorScale = getColorScale(colorScaleName, invertedColorScale);
     const colors = {
@@ -167,8 +206,8 @@ function update(data) {
     const avg = (arr) => arr.length > 0 ? sum(arr) / count(arr) : undefined;
     const aggregation = {"count": count, "sum": sum, "avg": avg}[metricAggregationName];
     const dimensions = {
-        width: dscc.getWidth(),
-        height: dscc.getHeight(),
+        width: dscc.getWidth() - (legendDisplay && ["left", "right"].includes(legendLocation) ? 200 : 0),
+        height: dscc.getHeight() - (legendDisplay && ["top", "bottom"].includes(legendLocation) ? 120 : 0),
         hexagonRadius: hexagonSize,
         pixelRatio: window.devicePixelRatio || 1
     };
@@ -227,6 +266,36 @@ function update(data) {
     // Coloring
     const colorize = val => val === undefined ? colors.map : colors.scale(standardize(val));
 
+    // Set up legend
+    if (legendDisplay) {
+        const legendLocation = data.style.legend_location.value;
+        let lgnd = d3.select("#legend")
+          .style("font-family", legendFontFamily)
+          .style("font-size", `${legendFontSize}px`)
+          .style("color", legendFontColor);
+        switch (legendLocation) {
+            case "top":
+                  lgnd.attr("direction", "horizontal");
+                  window.viz.base.style("flex-direction", "column-reverse");
+                  break;
+            case "bottom":
+                lgnd.attr("direction", "horizontal");
+                window.viz.base.style("flex-direction", "column");
+                break;
+            case "left":
+                lgnd.attr("direction", "vertical");
+                window.viz.base.style("flex-direction", "row-reverse");
+                break;
+            case "right":
+                lgnd.attr("direction", "vertical");
+                window.viz.base.style("flex-direction", "row");
+                break;
+        }
+        legend(metricName, standardize, colorize);
+    } else {
+        d3.select("#legend").style("display", "none");
+    }
+
     let dataBinding = window.viz.dataContainer.selectAll("custom.hex")
       .data(hex.grid.layout, function(d) { return d; });
 
@@ -273,10 +342,12 @@ function draw() {
         return;
     }
     // Repaint background
-    const pr = window.devicePixelRatio || 1;
+    const width = window.viz.canvas.attr("width");
+    const height = window.viz.canvas.attr("height");
     const backgroundColor = window.viz.canvas.attr("background-color");
+    window.viz.base.style("background-color", backgroundColor);
     window.viz.context.fillStyle = backgroundColor;
-    window.viz.context.fillRect(0, 0, dscc.getWidth() * pr, dscc.getHeight() * pr);
+    window.viz.context.fillRect(0, 0, width, height);
     window.viz.context.fill();
 
     // Paint hexagons
@@ -361,18 +432,21 @@ let sample = {
         ]
     },
     style: {
+        // Data
         projection: {value: "mercator"},
         map: {value: "united-states"},
+        hexagon_size: {value: 25},
+        aggregation: {value: "sum"},
+        // Color
         background_color: {
             value: {color: "aquamarine"}
         },
         map_color: {
             value: {color: "gray"}
         },
-        hexagon_size: {value: 25},
-        aggregation: {value: "sum"},
         colorscale: {value: "YlOrBr"},
         inverted_colorscale: {value: false},
+        // Tooltip
         tooltip_font_color: {
             value: {color: "black"}
         },
@@ -381,7 +455,15 @@ let sample = {
         tooltip_fill_color: {
             value: {color: "#dcdcdc"}
         },
-        tooltip_display_count: {value: false}
+        tooltip_display_count: {value: false},
+        // Legend
+        legend_location: {value: "bottom"},
+        legend_font_size: {value: 16},
+        legend_font_color: {
+            value:  {color: "black"}
+        },
+        legend_font_family: {value: "Helvetica, Verdana, sans-serif"},
+        legend_display: {value: true}
     }
 }
 

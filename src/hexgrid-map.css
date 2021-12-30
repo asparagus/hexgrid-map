@@ -1,5 +1,75 @@
-canvas {
-  cursor: pointer;
+body {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin: 0px;
+}
+
+#legend {
+  padding: 20px;
+  display: flex;
+}
+
+#legend[direction="vertical"] {
+  flex-direction: column;
+  align-items: flex-end;
+  width: 200px;
+}
+
+#legend[direction="horizontal"] {
+  flex-direction: column-reverse;
+  align-items: center;
+  height: 80px;
+}
+
+#legend[direction="vertical"] #legend-values {
+  flex-direction: column;
+}
+
+#legend[direction="horizontal"] #legend-values{
+  flex-direction: row;
+}
+
+#legend[direction="vertical"] .legend-value {
+  flex-direction: row;
+}
+
+#legend[direction="horizontal"] .legend-value {
+  flex-direction: column;
+  width: 2em;
+}
+
+#legend-title {
+  font-weight: bold;
+  margin: 5px 0px;
+}
+
+#legend-values {
+  display: flex;
+  margin: 0px 5px;
+}
+
+.legend-value {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.legend-color {
+  display: inline-block;
+  width: 2em;
+  height: 2em;
+  background-color: blue;
+  border: 1px solid black;
+}
+
+.legend-number {
+  display: inline-block;
+  margin: 0px 5px;
+}
+
+#legend[direction="horizontal"] .legend-value:not(:nth-child(5n + 1)) .legend-number {
+  display: none;
 }
 
 #tooltip {

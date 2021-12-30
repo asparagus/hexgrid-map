@@ -329,6 +329,62 @@
             "defaultValue": true
           }
         ]
+      },
+      {
+        "id": "legend",
+        "label": "Legend",
+        "elements": [
+          {
+            "type": "SELECT_SINGLE",
+            "id": "legend_location",
+            "label": "Location",
+            "defaultValue": "right",
+            "options": [
+              {
+                "label": "Left",
+                "value": "left"
+              },
+              {
+                "label": "Top",
+                "value": "top"
+              },
+              {
+                "label": "Right",
+                "value": "right"
+              },
+              {
+                "label": "Bottom",
+                "value": "bottom"
+              }
+            ]
+          },
+          {
+            "type": "FONT_SIZE",
+            "id": "legend_font_size",
+            "label": "Font size",
+            "defaultValue": "16px"
+          },
+          {
+            "type": "FONT_COLOR",
+            "id": "legend_font_color",
+            "label": "Font Color",
+            "defaultValue": {
+              "color": "black"
+            }
+          },
+          {
+            "type": "FONT_FAMILY",
+            "id": "legend_font_family",
+            "label": "Font family",
+            "defaultValue": "Roboto"
+          },
+          {
+            "type": "CHECKBOX",
+            "id": "legend_display",
+            "label": "Display Legend",
+            "defaultValue": true
+          }
+        ]
       }
     ]
   }
