@@ -362,14 +362,14 @@
             "type": "FONT_SIZE",
             "id": "legend_font_size",
             "label": "Font size",
-            "defaultValue": "16px"
+            "defaultValue": 16
           },
           {
             "type": "FONT_COLOR",
             "id": "legend_font_color",
             "label": "Font Color",
             "defaultValue": {
-              "color": "black"
+              "color": "#000000"
             }
           },
           {
