@@ -1,10 +1,8 @@
 # Hexgrid Map
 Data Studio Community Visualization for displaying hexgrid maps.
 
-![worldmap](https://github.com/asparagus/hexgrid-map/blob/master/img/world.jpg?raw=true)
-
-There's both world maps and city-specific maps available. Below an image of San Francisco with some random data.
-![sf](https://github.com/asparagus/hexgrid-map/blob/master/img/sf.png?raw=true)
+See it in use [here](https://datastudio.google.com/reporting/c66c9909-ae0b-4a19-a7ba-296e04e5a0f3).
+![report-example](https://datastudio.google.com/reporting/c66c9909-ae0b-4a19-a7ba-296e04e5a0f3)
 
 ## First-time Setup
 The main things you'll need to do are: install the dependencies, download the maps, bundle the JS code. This can be done by running the following commands:
