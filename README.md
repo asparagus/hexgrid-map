@@ -2,7 +2,8 @@
 Data Studio Community Visualization for displaying hexgrid maps.
 
 See it in use [here](https://datastudio.google.com/reporting/c66c9909-ae0b-4a19-a7ba-296e04e5a0f3).
-![report-example](https://datastudio.google.com/reporting/c66c9909-ae0b-4a19-a7ba-296e04e5a0f3)
+
+![report-example](img/calfire-report.png)
 
 ## First-time Setup
 The main things you'll need to do are: install the dependencies, download the maps, bundle the JS code. This can be done by running the following commands:
