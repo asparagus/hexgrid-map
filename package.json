@@ -5,7 +5,7 @@
   "main": "hexgrid-map.js",
   "scripts": {
     "clean": "rm -f main.js; rm -f bundle.js; rm -f maps.js; rm -f maps/*.geojson",
-    "premap": "python3 maps.py --config=src/hexgrid-map.json maps && echo \"Premap finished!\"",
+    "premap": "for geo in $npm_package_config_maps; do curl -LJ0 \"https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/${geo}.geojson\" > \"maps/${geo}.geojson\";done && echo \"Premap finished!\"",
     "map": "echo \"// Global definition\nvar maps = {};\" > maps.js && for file in maps/*.geojson; do city=$(echo \"$file\" | cut -d'/' -f 2 | cut -d'.' -f 1) && (echo \"maps['$city'] = \"; cat \"$file\"; echo) >> maps.js; done && echo \"Map finished!\"",
     "prebuild": "(cat node_modules/@google/dscc/_bundles/dscc.min.js; echo) > bundle.js && for f in simple-statistics d3-hexgrid d3; do (cat \"node_modules/${f}/dist/${f}.min.js\"; echo) >> bundle.js; done && echo \"Prebuild finished!\"",
     "build": "(cat bundle.js; echo; cat maps.js; echo; cat src/hexgrid-map.js) > main.js && echo \"Build finished!\"",
@@ -42,6 +42,7 @@
     "browserify": "^17.0.0"
   },
   "config": {
-    "gcsLocation": "gs://hexgrid-map-dev/master"
+    "gcsLocation": "gs://hexgrid-map-dev/master",
+    "maps": "africa asia europe north-america south-america oceania united-states canada mexico germany united-kingdom france-regions greece-regions china taiwan india australia california-counties san-francisco new-york-city-boroughs phoenix amsterdam"
   }
 }
