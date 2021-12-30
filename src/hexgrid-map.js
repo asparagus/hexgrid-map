@@ -25,6 +25,7 @@ class Visualization {
     context;
     dataContainer;
     tooltip;
+    legend;
     index;
 
     constructor(baseSelector) {
@@ -49,6 +50,7 @@ class Visualization {
         this.context = context;
         this.dataContainer = dataContainer;
         this.tooltip = ttip;
+        this.legend = lgnd;
         this.index = index;
 
         const handler = function(e) {
@@ -457,7 +459,7 @@ let sample = {
         },
         tooltip_display_count: {value: false},
         // Legend
-        legend_location: {value: "bottom"},
+        legend_location: {value: "right"},
         legend_font_size: {value: 16},
         legend_font_color: {
             value:  {color: "black"}
