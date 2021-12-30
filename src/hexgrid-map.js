@@ -1,4 +1,4 @@
-function approxBinarySearch(array, value) {
+function binarySearch(array, value) {
     let proxyIndexUpperBound = array.length;
     let proxyIndexLowerBound = 0;
     let proxyIndex, currentValue;
@@ -66,10 +66,10 @@ class Visualization {
 
 function select(mouseX, mouseY) {
     let candidates = [];
-    let approximateIndexY = approxBinarySearch(viz.index.map(el => el[0].y), mouseY);
+    let approximateIndexY = binarySearch(viz.index.map(el => el[0].y), mouseY);
     for (let y = approximateIndexY - 1; y <= approximateIndexY + 1 && y < viz.index.length; y++) {
         if (y < 0) { continue; }
-        let approximateIndexX = approxBinarySearch(viz.index[y].map(el => el.x), mouseX);
+        let approximateIndexX = binarySearch(viz.index[y].map(el => el.x), mouseX);
         for (let x = approximateIndexX - 1; x <= approximateIndexX + 1 && x < viz.index[y].length; x++) {
             if (x < 0) { continue; }
             candidates.push(viz.index[y][x]);
@@ -385,88 +385,6 @@ function getProjection(projectionName) {
         "mercator": d3.geoMercator
     }
     return availableProjections[projectionName]();
-}
-
-let sample = {
-    fields: {
-        metric: [{name: "l2_3s"}]
-    },
-    tables: {
-        DEFAULT: [
-            {metric: 1, lat: 41.346439, long: -73.084938},
-            {metric: 1, lat: 37.630322, long: -104.790543},
-            {metric: 1, lat: 40.626743, long: -103.217026},
-            {metric: 1, lat: 40.490429, long: -106.842384},
-            {metric: 1, lat: 38.025131, long: -107.67588},
-            {metric: 1, lat: 39.247478, long: -106.300194},
-            {metric: 1, lat: 38.547871, long: -106.938622},
-            {metric: 1, lat: 40.255306, long: -103.803062},
-            {metric: 1, lat: 30.193626, long: -85.683029},
-            {metric: 1, lat: 25.793449, long: -80.139198},
-            {metric: 1, lat: 38.749077, long: -105.18306},
-            {metric: 1, lat: 39.803318, long: -105.51683},
-            {metric: 1, lat: 38.444931, long: -105.24572},
-            {metric: 1, lat: 39.969753, long: -104.836723},
-            {metric: 1, lat: 34.497196, long: -91.560921},
-            {metric: 1, lat: 35.705608, long: -89.992729},
-            {metric: 1, lat: 35.618671, long: -91.271286},
-            {metric: 1, lat: 35.010712, long: -90.797783},
-            {metric: 1, lat: 33.132671, long: -91.971634},
-            {metric: 1, lat: 33.586617, long: -92.842979},
-            {metric: 1, lat: 35.934574, long: -89.92617},
-            {metric: 1, lat: 35.67897, long: -109.067413},
-            {metric: 1, lat: 33.395844, long: -110.793739},
-            {metric: 1, lat: 61.600803, long: -149.125259},
-            {metric: 1, lat: 32.429066, long: -85.715233},
-            {metric: 1, lat: 31.806484, long: -85.968628},
-            {metric: 1, lat: 34.650826, long: -86.088501},
-            {metric: 1, lat: 31.463181, long: -85.647202},
-            {metric: 1, lat: 43.0186, long: -88.259773},
-            {metric: 1, lat: 33.834263, long: -87.280708},
-            {metric: 1, lat: 34.361664, long: -86.305595},
-            {metric: 1, lat: 31.89818, long: -85.16021},
-            {metric: 1, lat: 31.335653, long: -85.865448},
-            {metric: 1, lat: 32.510178, long: -87.855392},
-            {metric: 1, lat: 31.025837, long: -87.506462},
-            {metric: 1, lat: 32.940945, long: -85.970024},
-            {metric: 1, lat: 33.982506, long: -118.040962},
-            {metric: 1, lat: 37.662937, long: -122.433014},
-        ]
-    },
-    style: {
-        // Data
-        projection: {value: "mercator"},
-        map: {value: "united-states"},
-        hexagon_size: {value: 25},
-        aggregation: {value: "sum"},
-        // Color
-        background_color: {
-            value: {color: "aquamarine"}
-        },
-        map_color: {
-            value: {color: "gray"}
-        },
-        colorscale: {value: "YlOrBr"},
-        inverted_colorscale: {value: false},
-        // Tooltip
-        tooltip_font_color: {
-            value: {color: "black"}
-        },
-        tooltip_font_size: {value: 14},
-        tooltip_font_family: {value: "Helvetica, Verdana, sans-serif"},
-        tooltip_fill_color: {
-            value: {color: "#dcdcdc"}
-        },
-        tooltip_display_count: {value: false},
-        // Legend
-        legend_location: {value: "right"},
-        legend_font_size: {value: 16},
-        legend_font_color: {
-            value:  {color: "black"}
-        },
-        legend_font_family: {value: "Helvetica, Verdana, sans-serif"},
-        legend_display: {value: true}
-    }
 }
 
 d3.timer(draw);
