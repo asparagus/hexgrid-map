@@ -25,6 +25,7 @@ class Visualization {
     context;
     dataContainer;
     tooltip;
+    tooltipHeader;
     legend;
     index;
 
@@ -50,6 +51,7 @@ class Visualization {
         this.context = context;
         this.dataContainer = dataContainer;
         this.tooltip = ttip;
+        this.tooltipHeader = ttip.selectChildren("#tooltip-header");
         this.legend = lgnd;
         this.index = index;
 
@@ -127,6 +129,8 @@ function buildTooltip(base) {
       .attr("id", "tooltip")
       .style("display", "none");
     container.append("div")
+      .attr("id", "tooltip-header")
+    container.append("div")
       .attr("id", "tooltip-metric-name");
     container.append("div")
       .attr("id", "tooltip-metric-value");
@@ -135,7 +139,7 @@ function buildTooltip(base) {
     countContainer.append("hr")
     countContainer.append("div")
       .attr("id", "tooltip-count-name")
-      .text("Record count:");
+      .text("Record count");
     countContainer.append("div")
       .attr("id", "tooltip-count-value");
     return container;
@@ -149,12 +153,14 @@ function tooltip(x, y, node) {
         let metricName = ttip.attr("metric") || "Metric";
         let showCount = Number(ttip.attr("count"));
         let height = window.viz.canvas.attr("height") / 2;
-        let tooltipX = x - 60;
+        let tooltipX = x;
         let tooltipY = height - y + 30;
         ttip
           .style("display", "block")
           .style("left", `${tooltipX}px`)
           .style("bottom", `${tooltipY}px`);
+        d3.select("#tooltip-header")
+          .text(`lat: ${node.coords[0].toFixed(2)}, long: ${node.coords[1].toFixed(2)}`);
         d3.select("#tooltip-metric-name")
           .text(metricName);
         d3.select("#tooltip-metric-value")
@@ -186,6 +192,7 @@ function update(data) {
     const invertedColorScale = data.style.inverted_colorscale.value;
     const metricName = data.fields.metric[0].name;
     const metricAggregationName = data.style.aggregation.value;
+    const tooltipHeaderFillColor = data.style.tooltip_header_fill_color.value.color;
     const tooltipFillColor = data.style.tooltip_fill_color.value.color;
     const tooltipFontColor = data.style.tooltip_font_color.value.color;
     const tooltipFontSize = data.style.tooltip_font_size.value;
@@ -208,8 +215,8 @@ function update(data) {
     const avg = (arr) => arr.length > 0 ? sum(arr) / count(arr) : undefined;
     const aggregation = {"count": count, "sum": sum, "avg": avg}[metricAggregationName];
     const dimensions = {
-        width: dscc.getWidth() - (legendDisplay && ["left", "right"].includes(legendLocation) ? 200 : 0),
-        height: dscc.getHeight() - (legendDisplay && ["top", "bottom"].includes(legendLocation) ? 120 : 0),
+        width: dscc.getWidth() - (legendDisplay && ["left", "right"].includes(legendLocation) ? 200 : 0) - 160,
+        height: dscc.getHeight() - (legendDisplay && ["top", "bottom"].includes(legendLocation) ? 120 : 0) - 60,
         hexagonRadius: hexagonSize,
         pixelRatio: window.devicePixelRatio || 1
     };
@@ -230,6 +237,7 @@ function update(data) {
       .style("background-color", tooltipFillColor)
       .style("font-size", `${tooltipFontSize}px`)
       .style("font-family", tooltipFontFamily);
+    window.viz.tooltipHeader.style("background-color", tooltipHeaderFillColor);
 
     // Data
     const pointData = data.tables.DEFAULT;
@@ -251,16 +259,17 @@ function update(data) {
     const hex = hexgrid(pointData, ["metric"]);
     const hexagon = hex.hexagon();
     // Aggregation & standardization
-    hex.grid.layout.forEach(arr => {
-        arr.radius = dimensions.hexagonRadius;
-        arr.count = arr.length;
-        arr.metric = aggregation(arr.map(x => +x.metric));
+    hex.grid.layout.forEach(hexa => {
+        hexa.radius = dimensions.hexagonRadius;
+        hexa.count = hexa.length;
+        hexa.metric = aggregation(hexa.map(x => +x.metric));
+        hexa.coords = projection.invert([hexa.y - hex.grid.layout[0].y, hexa.x - hex.grid.layout[0].x]);
     });
     // Indexing
     window.viz.index = buildIndex(hex.grid.layout);
 
     // Metric coloring
-    const aggregatedValues = hex.grid.layout.map(arr => arr.metric);
+    const aggregatedValues = hex.grid.layout.map(hexa => hexa.metric);
     const standardize = d3.scaleLinear()
       .domain(d3.extent(aggregatedValues))
       .range([0, 1]);
@@ -322,7 +331,6 @@ function update(data) {
 }
 
 function buildIndex(hexagons) {
-    window.hex = hexagons;
     let indexByY = {};
     hexagons.forEach(hex => {
         if (!(hex.y  in indexByY)) {

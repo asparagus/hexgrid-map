@@ -5,10 +5,15 @@ body {
   margin: 0px;
 }
 
+canvas {
+  margin: 60px 80px 0px;
+}
+
 #legend {
-  padding: 20px;
+  padding: 20px 40px;
   display: flex;
   user-select: none;
+  overflow: overlay;
 }
 
 #legend[direction="vertical"] {
@@ -83,7 +88,7 @@ body {
   border-style: solid;
   border-color: black;
   border-width: 2px;
-  width: 120px;
+  width: 160px;
 }
 
 #tooltip div {
@@ -98,13 +103,17 @@ body {
   width: 2px;
 
   bottom: -15px;
-  /**
-   * It seems this value should be 63 for it to work better locally,
-   * but 57 works better in Data Studio
-   */
-  left: 57px;
+  left: 77px;
 
   background-color: black;
+}
+
+#tooltip-header {
+  font-size: smaller;
+  margin: -5px -10px 5px;
+  padding: 5px 10px;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
 }
 
 #tooltip-metric-value,
