@@ -383,30 +383,6 @@
             "label": "Tooltip",
             "elements": [
                 {
-                    "type": "FILL_COLOR",
-                    "id": "tooltip_fill_color",
-                    "label": "Fill color",
-                    "defaultValue": {
-                        "color": "#efefef"
-                    }
-                },
-                {
-                    "type": "FILL_COLOR",
-                    "id": "tooltip_header_fill_color",
-                    "label": "Header fill color",
-                    "defaultValue": {
-                        "color": "#efefef"
-                    }
-                },
-                {
-                    "type": "FONT_COLOR",
-                    "id": "tooltip_font_color",
-                    "label": "Font color",
-                    "defaultValue": {
-                        "color": "#333333"
-                    }
-                },
-                {
                     "type": "FONT_SIZE",
                     "id": "tooltip_font_size",
                     "label": "Font size",

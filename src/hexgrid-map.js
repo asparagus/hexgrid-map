@@ -160,7 +160,7 @@ function tooltip(x, y, node) {
           .style("left", `${tooltipX}px`)
           .style("bottom", `${tooltipY}px`);
         d3.select("#tooltip-header")
-          .text(`lat: ${node.coords[0].toFixed(2)}, long: ${node.coords[1].toFixed(2)}`);
+          .text(`lat: ${node.coords[1].toFixed(2)}, long: ${node.coords[0].toFixed(2)}`);
         d3.select("#tooltip-metric-name")
           .text(metricName);
         d3.select("#tooltip-metric-value")
@@ -192,9 +192,6 @@ function update(data) {
     const invertedColorScale = data.style.inverted_colorscale.value;
     const metricName = data.fields.metric[0].name;
     const metricAggregationName = data.style.aggregation.value;
-    const tooltipHeaderFillColor = data.style.tooltip_header_fill_color.value.color;
-    const tooltipFillColor = data.style.tooltip_fill_color.value.color;
-    const tooltipFontColor = data.style.tooltip_font_color.value.color;
     const tooltipFontSize = data.style.tooltip_font_size.value;
     const tooltipFontFamily = data.style.tooltip_font_family.value;
     const tooltipDisplayCount = data.style.tooltip_display_count.value;
@@ -233,11 +230,8 @@ function update(data) {
     window.viz.tooltip
       .attr("metric", metricName)
       .attr("count", Number(tooltipDisplayCount))
-      .style("color", tooltipFontColor)
-      .style("background-color", tooltipFillColor)
       .style("font-size", `${tooltipFontSize}px`)
       .style("font-family", tooltipFontFamily);
-    window.viz.tooltipHeader.style("background-color", tooltipHeaderFillColor);
 
     // Data
     const pointData = data.tables.DEFAULT;
@@ -263,7 +257,7 @@ function update(data) {
         hexa.radius = dimensions.hexagonRadius;
         hexa.count = hexa.length;
         hexa.metric = aggregation(hexa.map(x => +x.metric));
-        hexa.coords = projection.invert([hexa.y - hex.grid.layout[0].y, hexa.x - hex.grid.layout[0].x]);
+        hexa.coords = projection.invert([hexa.x - hex.grid.layout[0].x, hexa.y - hex.grid.layout[0].y]);
     });
     // Indexing
     window.viz.index = buildIndex(hex.grid.layout);
