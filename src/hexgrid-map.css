@@ -8,6 +8,7 @@ body {
 #legend {
   padding: 20px;
   display: flex;
+  user-select: none;
 }
 
 #legend[direction="vertical"] {

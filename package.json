@@ -43,6 +43,6 @@
   },
   "config": {
     "gcsLocation": "gs://hexgrid-map-dev/master",
-    "maps": "africa asia europe north-america south-america oceania united-states canada mexico germany united-kingdom france-regions greece-regions china taiwan india australia california-counties san-francisco new-york-city-boroughs phoenix amsterdam"
+    "maps": "africa asia europe north-america south-america oceania united-states canada mexico germany united-kingdom france-regions greece-regions italy-regions china taiwan india australia california-counties san-francisco new-york-city-boroughs phoenix amsterdam"
   }
 }

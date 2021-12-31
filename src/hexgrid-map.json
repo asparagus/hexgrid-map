@@ -103,6 +103,10 @@
                             "value": "india"
                         },
                         {
+                            "label": "Italy",
+                            "value": "italy-regions"
+                        },
+                        {
                             "label": "Mexico",
                             "value": "mexico"
                         },

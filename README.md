@@ -24,6 +24,7 @@ Countries:
 - Germany
 - Greece
 - India
+- Italy
 - Mexico
 - Taiwan
 - United Kingdom
