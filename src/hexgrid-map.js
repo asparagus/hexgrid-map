@@ -99,20 +99,20 @@ function select(mouseX, mouseY) {
 
 function buildLegend(base) {
     let lgnd = base.append("div")
-      .attr("id", "legend")
-      .attr("direction", "horizontal");
+        .attr("id", "legend")
+        .attr("direction", "horizontal");
     lgnd.append("div")
-      .attr("id", "legend-title")
+        .attr("id", "legend-title")
     let lgndValues = lgnd.append("div")
-      .attr("id", "legend-values");
+        .attr("id", "legend-values");
     for (let i in [...Array(11).keys()]) {
         const value = lgndValues.append("div")
-          .attr("class", "legend-value");
+            .attr("class", "legend-value");
         value.append("span")
-          .attr("class", "legend-number")
-          .attr("idx", i);
+            .attr("class", "legend-number")
+            .attr("idx", i);
         value.append("span")
-          .attr("class", "legend-color");
+            .attr("class", "legend-color");
     }
     return lgnd;
 }
@@ -132,22 +132,22 @@ function legend(metricName, valueScale, colorScale) {
 
 function buildTooltip(base) {
     let container = base.append("div")
-      .attr("id", "tooltip")
-      .style("display", "none");
+        .attr("id", "tooltip")
+        .style("display", "none");
     container.append("div")
-      .attr("id", "tooltip-header")
+        .attr("id", "tooltip-header")
     container.append("div")
-      .attr("id", "tooltip-metric-name");
+        .attr("id", "tooltip-metric-name");
     container.append("div")
-      .attr("id", "tooltip-metric-value");
+        .attr("id", "tooltip-metric-value");
     let countContainer = container.append("div")
-      .attr("id", "tooltip-count-container");
+        .attr("id", "tooltip-count-container");
     countContainer.append("hr")
     countContainer.append("div")
-      .attr("id", "tooltip-count-name")
-      .text("Record count");
+        .attr("id", "tooltip-count-name")
+        .text("Record count");
     countContainer.append("div")
-      .attr("id", "tooltip-count-value");
+        .attr("id", "tooltip-count-value");
     return container;
 }
 
@@ -177,23 +177,23 @@ function tooltip(node) {
         let tooltipX = node.x;
         let tooltipY = height - node.y + radius + window.cssDimensions.tooltipStickLength - window.cssDimensions.tooltipBorderWidth;
         ttip
-          .style("display", "block")
-          .style("left", `${tooltipX}px`)
-          .style("bottom", `${tooltipY}px`);
+            .style("display", "block")
+            .style("left", `${tooltipX}px`)
+            .style("bottom", `${tooltipY}px`);
         d3.select("#tooltip-header")
-          .text(`lat: ${node.coords[1].toFixed(2)}, long: ${node.coords[0].toFixed(2)}`);
+            .text(`lat: ${node.coords[1].toFixed(2)}, long: ${node.coords[0].toFixed(2)}`);
         d3.select("#tooltip-metric-name")
-          .text(metricName);
+            .text(metricName);
         d3.select("#tooltip-metric-value")
-          .text((+node.metric.toFixed(2)).toLocaleString("en", {useGrouping: true}));
+            .text((+node.metric.toFixed(2)).toLocaleString("en", {useGrouping: true}));
         if (showCount) {
             d3.select("#tooltip-count-container")
-              .style("display", "block");
+                .style("display", "block");
             d3.select("#tooltip-count-value")
-              .text(node.count.toLocaleString("en", {useGrouping: true}));
+                .text(node.count.toLocaleString("en", {useGrouping: true}));
         } else {
             d3.select("#tooltip-count-container")
-              .style("display", "none");
+                .style("display", "none");
         }
         window.viz.selected = true;
         window.viz.selectedX = node.x;
@@ -203,28 +203,28 @@ function tooltip(node) {
 }
 
 const pSBC=(p,c0,c1,l)=>{
-  let r,g,b,P,f,t,h,i=parseInt,m=Math.round,a=typeof(c1)=="string";
-  if(typeof(p)!="number"||p<-1||p>1||typeof(c0)!="string"||(c0[0]!='r'&&c0[0]!='#')||(c1&&!a))return null;
-  if(!this.pSBCr)this.pSBCr=(d)=>{
-    let n=d.length,x={};
-    if(n>9){
-      [r,g,b,a]=d=d.split(","),n=d.length;
-      if(n<3||n>4)return null;
-      x.r=i(r[3]=="a"?r.slice(5):r.slice(4)),x.g=i(g),x.b=i(b),x.a=a?parseFloat(a):-1
-    }else{
-      if(n==8||n==6||n<4)return null;
-      if(n<6)d="#"+d[1]+d[1]+d[2]+d[2]+d[3]+d[3]+(n>4?d[4]+d[4]:"");
-      d=i(d.slice(1),16);
-      if(n==9||n==5)x.r=d>>24&255,x.g=d>>16&255,x.b=d>>8&255,x.a=m((d&255)/0.255)/1000;
-      else x.r=d>>16,x.g=d>>8&255,x.b=d&255,x.a=-1
-    }return x};
-  h=c0.length>9,h=a?c1.length>9?true:c1=="c"?!h:false:h,f=this.pSBCr(c0),P=p<0,t=c1&&c1!="c"?this.pSBCr(c1):P?{r:0,g:0,b:0,a:-1}:{r:255,g:255,b:255,a:-1},p=P?p*-1:p,P=1-p;
-  if(!f||!t)return null;
-  if(l)r=m(P*f.r+p*t.r),g=m(P*f.g+p*t.g),b=m(P*f.b+p*t.b);
-  else r=m((P*f.r**2+p*t.r**2)**0.5),g=m((P*f.g**2+p*t.g**2)**0.5),b=m((P*f.b**2+p*t.b**2)**0.5);
-  a=f.a,t=t.a,f=a>=0||t>=0,a=f?a<0?t:t<0?a:a*P+t*p:0;
-  if(h)return"rgb"+(f?"a(":"(")+r+","+g+","+b+(f?","+m(a*1000)/1000:"")+")";
-  else return"#"+(4294967296+r*16777216+g*65536+b*256+(f?m(a*255):0)).toString(16).slice(1,f?undefined:-2)
+    let r,g,b,P,f,t,h,i=parseInt,m=Math.round,a=typeof(c1)=="string";
+    if(typeof(p)!="number"||p<-1||p>1||typeof(c0)!="string"||(c0[0]!='r'&&c0[0]!='#')||(c1&&!a))return null;
+    if(!this.pSBCr)this.pSBCr=(d)=>{
+        let n=d.length,x={};
+        if(n>9){
+            [r,g,b,a]=d=d.split(","),n=d.length;
+            if(n<3||n>4)return null;
+            x.r=i(r[3]=="a"?r.slice(5):r.slice(4)),x.g=i(g),x.b=i(b),x.a=a?parseFloat(a):-1
+        } else{
+            if(n==8||n==6||n<4)return null;
+            if(n<6)d="#"+d[1]+d[1]+d[2]+d[2]+d[3]+d[3]+(n>4?d[4]+d[4]:"");
+            d=i(d.slice(1),16);
+            if(n==9||n==5)x.r=d>>24&255,x.g=d>>16&255,x.b=d>>8&255,x.a=m((d&255)/0.255)/1000;
+            else x.r=d>>16,x.g=d>>8&255,x.b=d&255,x.a=-1
+        } return x};
+    h=c0.length>9,h=a?c1.length>9?true:c1=="c"?!h:false:h,f=this.pSBCr(c0),P=p<0,t=c1&&c1!="c"?this.pSBCr(c1):P?{r:0,g:0,b:0,a:-1}:{r:255,g:255,b:255,a:-1},p=P?p*-1:p,P=1-p;
+    if(!f||!t)return null;
+    if(l)r=m(P*f.r+p*t.r),g=m(P*f.g+p*t.g),b=m(P*f.b+p*t.b);
+    else r=m((P*f.r**2+p*t.r**2)**0.5),g=m((P*f.g**2+p*t.g**2)**0.5),b=m((P*f.b**2+p*t.b**2)**0.5);
+    a=f.a,t=t.a,f=a>=0||t>=0,a=f?a<0?t:t<0?a:a*P+t*p:0;
+    if(h)return"rgb"+(f?"a(":"(")+r+","+g+","+b+(f?","+m(a*1000)/1000:"")+")";
+    else return"#"+(4294967296+r*16777216+g*65536+b*256+(f?m(a*255):0)).toString(16).slice(1,f?undefined:-2)
 }
 
 function deepEqual(x, y) {
@@ -305,37 +305,37 @@ function update(data) {
     const projection = getProjection(projectionName).fitSize([dimensions.width, dimensions.height], geo);
 
     window.viz.canvas
-      .attr("aggregation", metricAggregationName)
-      .attr("hexagon-radius", dimensions.hexagonRadius)
-      .attr("width", dimensions.width * dimensions.pixelRatio)
-      .attr("height", dimensions.height * dimensions.pixelRatio)
-      .style("width", `${dimensions.width}px`)
-      .attr("background-color", colors.background);
+        .attr("aggregation", metricAggregationName)
+        .attr("hexagon-radius", dimensions.hexagonRadius)
+        .attr("width", dimensions.width * dimensions.pixelRatio)
+        .attr("height", dimensions.height * dimensions.pixelRatio)
+        .style("width", `${dimensions.width}px`)
+        .attr("background-color", colors.background);
     window.viz.context.scale(dimensions.pixelRatio, dimensions.pixelRatio);
     window.viz.tooltip
-      .attr("metric", metricName)
-      .attr("count", Number(tooltipDisplayCount))
-      .style("font-size", `${tooltipFontSize}px`)
-      .style("color", tooltipFontColor)
-      .style("background-color", tooltipFillColor)
-      .style("font-family", tooltipFontFamily);
+        .attr("metric", metricName)
+        .attr("count", Number(tooltipDisplayCount))
+        .style("font-size", `${tooltipFontSize}px`)
+        .style("color", tooltipFontColor)
+        .style("background-color", tooltipFillColor)
+        .style("font-family", tooltipFontFamily);
     window.viz.tooltipHeader
-      .style("background-color", pSBC(0.15, pSBC(-0.3, tooltipFillColor)));
+        .style("background-color", pSBC(0.15, pSBC(-0.3, tooltipFillColor)));
     // Data
     const pointData = data.tables.DEFAULT;
 
     // Projection and path.
     const geoPath = d3.geoPath()
-      .projection(projection)
-      .context(window.viz.context);
+        .projection(projection)
+        .context(window.viz.context);
 
     // Hexgrid generator.
     const hexgrid = d3.hexgrid()
-      .extent([dimensions.width, dimensions.height])
-      .geography(geo)
-      .projection(projection)
-      .pathGenerator(geoPath)
-      .hexRadius(dimensions.hexagonRadius);
+        .extent([dimensions.width, dimensions.height])
+        .geography(geo)
+        .projection(projection)
+        .pathGenerator(geoPath)
+        .hexRadius(dimensions.hexagonRadius);
 
     // Hexgrid instance.
     const hex = hexgrid(pointData, ["metric"]);
@@ -354,8 +354,8 @@ function update(data) {
     // Metric coloring
     const aggregatedValues = hex.grid.layout.map(hexa => hexa.metric);
     const standardize = d3.scaleLinear()
-      .domain(d3.extent(aggregatedValues))
-      .range([0, 1]);
+        .domain(d3.extent(aggregatedValues))
+        .range([0, 1]);
 
     // Coloring
     const colorize = val => val === undefined ? colors.map : colors.scale(standardize(val));
@@ -366,9 +366,9 @@ function update(data) {
     // Set up legend
     if (legendDisplay) {
         let lgnd = d3.select("#legend")
-          .style("font-family", legendFontFamily)
-          .style("font-size", `${legendFontSize}px`)
-          .style("color", legendFontColor);
+            .style("font-family", legendFontFamily)
+            .style("font-size", `${legendFontSize}px`)
+            .style("color", legendFontColor);
         switch (legendLocation) {
             case "top":
                   lgnd.attr("direction", "horizontal");
@@ -393,24 +393,24 @@ function update(data) {
     }
 
     let dataBinding = window.viz.dataContainer.selectAll("custom.hex")
-      .data(hex.grid.layout, function(d) { return d; });
+        .data(hex.grid.layout, function(d) { return d; });
 
     // For new elements, create a 'custom' dom node, of class hex
     // with the appropriate attributes
     dataBinding.enter()
-      .append("custom")
-      .classed("hex", true)
-      .attr("x", hex => hex.x)
-      .attr("y", hex => hex.y)
-      .attr("color", hex => hex.color)
-      .attr("hexagon", hexagon);
+        .append("custom")
+        .classed("hex", true)
+        .attr("x", hex => hex.x)
+        .attr("y", hex => hex.y)
+        .attr("color", hex => hex.color)
+        .attr("hexagon", hexagon);
 
     // When updating, adjust everything
     dataBinding
-      .attr("x", hex => hex.x)
-      .attr("y", hex => hex.y)
-      .attr("color", hex => hex.color)
-      .attr("hexagon", hexagon);
+        .attr("x", hex => hex.x)
+        .attr("y", hex => hex.y)
+        .attr("color", hex => hex.color)
+        .attr("hexagon", hexagon);
 
     dataBinding.exit().remove();
 }
