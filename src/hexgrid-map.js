@@ -151,7 +151,7 @@ function buildTooltip(base) {
     return container;
 }
 
-styles = {
+cssDimensions = {
     canvasSideMargin: 80,
     canvasTopMargin: 60,
     canvasBottomMargin: 0,
@@ -160,6 +160,9 @@ styles = {
     legendVerticalWidth: 200,
     legendHorizontalHeight: 80,
 }
+
+styles = {}
+themes = {}
 
 function tooltip(node) {
     const radius = Number(viz.canvas.attr("hexagon-radius"));
@@ -172,7 +175,7 @@ function tooltip(node) {
         let showCount = Number(ttip.attr("count"));
         let height = window.viz.canvas.attr("height") / (window.devicePixelRatio || 1);
         let tooltipX = node.x;
-        let tooltipY = height - node.y + radius + window.styles.tooltipStickLength - window.styles.tooltipBorderWidth;
+        let tooltipY = height - node.y + radius + window.cssDimensions.tooltipStickLength - window.cssDimensions.tooltipBorderWidth;
         ttip
           .style("display", "block")
           .style("left", `${tooltipX}px`)
@@ -224,6 +227,22 @@ const pSBC=(p,c0,c1,l)=>{
   else return"#"+(4294967296+r*16777216+g*65536+b*256+(f?m(a*255):0)).toString(16).slice(1,f?undefined:-2)
 }
 
+function deepEqual(x, y) {
+    if (typeof(x) === "object") {
+        if (typeof(y) === "object") {
+            for (let prop in x) {
+                if (!deepEqual(x[prop], y[prop])) {
+                    return false;
+                }
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+    return x === y;
+}
+
 function update(data) {
     if (window.viz === undefined) {
         window.viz = new Visualization("body");
@@ -252,6 +271,20 @@ function update(data) {
     const legendFontFamily = style.legend_font_family.value || theme.themeFontFamily;
     const legendDisplay = style.legend_display.value;
 
+    if (deepEqual(style, window.styles)) {
+        console.log("Style kept");
+    } else {
+        console.log("Style changed");
+        console.log(style)
+        window.styles = style;
+    }
+    if (deepEqual(theme, window.themes)) {
+        console.log("Theme kept");
+    } else {
+        console.log("Theme changed");
+        window.themes = theme;
+    }
+
     const colorScale = getColorScale(colorScaleName, invertedColorScale);
     const colors = {
         scale: colorScale,
@@ -263,8 +296,8 @@ function update(data) {
     const avg = (arr) => arr.length > 0 ? sum(arr) / count(arr) : undefined;
     const aggregation = {"count": count, "sum": sum, "avg": avg}[metricAggregationName];
     const dimensions = {
-        width: dscc.getWidth() - (legendDisplay && ["left", "right"].includes(legendLocation) ? window.styles.legendVerticalWidth : 0) - 2 * window.styles.canvasSideMargin,
-        height: dscc.getHeight() - (legendDisplay && ["top", "bottom"].includes(legendLocation) ? window.styles.legendHorizontalHeight : 0) - window.styles.canvasTopMargin - window.styles.canvasBottomMargin,
+        width: dscc.getWidth() - (legendDisplay && ["left", "right"].includes(legendLocation) ? window.cssDimensions.legendVerticalWidth : 0) - 2 * window.cssDimensions.canvasSideMargin,
+        height: dscc.getHeight() - (legendDisplay && ["top", "bottom"].includes(legendLocation) ? window.cssDimensions.legendHorizontalHeight : 0) - window.cssDimensions.canvasTopMargin - window.cssDimensions.canvasBottomMargin,
         hexagonRadius: hexagonSize,
         pixelRatio: window.devicePixelRatio || 1
     };
