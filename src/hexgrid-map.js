@@ -230,23 +230,27 @@ function update(data) {
     }
 
     // Options
-    const projectionName = data.style.projection.value;
-    const map = data.style.map.value;
-    const hexagonSize = data.style.hexagon_size.value;
-    const backgroundColor = data.style.background_color.value.color;
-    const mapColor = data.style.map_color.value.color;
-    const colorScaleName = data.style.colorscale.value;
-    const invertedColorScale = data.style.inverted_colorscale.value;
+    const style = data.style;
+    const theme = data.theme;
+    const projectionName = style.projection.value;
+    const map = style.map.value;
+    const hexagonSize = style.hexagon_size.value;
+    const backgroundColor = style.background_color.value.color || theme.themeFillColor.color;
+    const mapColor = style.map_color.value.color || theme.themeAccentFontColor.color;
+    const colorScaleName = style.colorscale.value;
+    const invertedColorScale = style.inverted_colorscale.value;
     const metricName = data.fields.metric[0].name;
-    const metricAggregationName = data.style.aggregation.value;
-    const tooltipFontSize = data.style.tooltip_font_size.value;
-    const tooltipFontFamily = data.style.tooltip_font_family.value;
-    const tooltipDisplayCount = data.style.tooltip_display_count.value;
-    const legendLocation = data.style.legend_location.value;
-    const legendFontSize = data.style.legend_font_size.value;
-    const legendFontColor = data.style.legend_font_color.value.color;
-    const legendFontFamily = data.style.legend_font_family.value;
-    const legendDisplay = data.style.legend_display.value;
+    const metricAggregationName = style.aggregation.value;
+    const tooltipFillColor = style.tooltip_color.value.color || theme.themeAccentFillColor.color;
+    const tooltipFontColor = style.tooltip_font_color.value.color || theme.themeAccentFontColor.color;
+    const tooltipFontSize = style.tooltip_font_size.value;
+    const tooltipFontFamily = style.tooltip_font_family.value || theme.themeFontFamily;
+    const tooltipDisplayCount = style.tooltip_display_count.value;
+    const legendLocation = style.legend_location.value;
+    const legendFontSize = style.legend_font_size.value;
+    const legendFontColor = style.legend_font_color.value.color || theme.themeFontColor.color;
+    const legendFontFamily = style.legend_font_family.value || theme.themeFontFamily;
+    const legendDisplay = style.legend_display.value;
 
     const colorScale = getColorScale(colorScaleName, invertedColorScale);
     const colors = {
@@ -279,7 +283,11 @@ function update(data) {
       .attr("metric", metricName)
       .attr("count", Number(tooltipDisplayCount))
       .style("font-size", `${tooltipFontSize}px`)
+      .style("color", tooltipFontColor)
+      .style("background-color", tooltipFillColor)
       .style("font-family", tooltipFontFamily);
+    window.viz.tooltipHeader
+      .style("background-color", pSBC(0.15, pSBC(-0.3, tooltipFillColor)));
     // Data
     const pointData = data.tables.DEFAULT;
 
@@ -324,7 +332,6 @@ function update(data) {
 
     // Set up legend
     if (legendDisplay) {
-        const legendLocation = data.style.legend_location.value;
         let lgnd = d3.select("#legend")
           .style("font-family", legendFontFamily)
           .style("font-size", `${legendFontSize}px`)

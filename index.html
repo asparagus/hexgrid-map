@@ -62,14 +62,20 @@
                 aggregation: {value: "sum"},
                 // Color
                 background_color: {
-                    value: {color: "#202124"}
+                    value: {color: undefined}
                 },
                 map_color: {
-                    value: {color: "gray"}
+                    value: {color: undefined}
                 },
                 colorscale: {value: "YlOrBr"},
                 inverted_colorscale: {value: false},
                 // Tooltip
+                tooltip_color: {
+                    value: {color: undefined}
+                },
+                tooltip_font_color: {
+                    value: {color: undefined}
+                },
                 tooltip_font_size: {value: 14},
                 tooltip_font_family: {value: "Helvetica, Verdana, sans-serif"},
                 tooltip_display_count: {value: false},
@@ -77,10 +83,18 @@
                 legend_location: {value: "right"},
                 legend_font_size: {value: 16},
                 legend_font_color: {
-                    value:  {color: "#ffffff"}
+                    value:  {color: undefined}
                 },
                 legend_font_family: {value: "Helvetica, Verdana, sans-serif"},
                 legend_display: {value: true}
+            },
+            theme: {
+                themeAccentFillColor: {color: "#263238"},
+                themeAccentFontColor: {color: "#e0e0e0"},
+                themeAccentFontFamily: "Droid Sans",
+                themeFillColor: {color: "#202124"},
+                themeFontColor: {color: "#ffffff"},
+                themeFontFamily: "Droid Sans"
             }
         }
         update(sample);

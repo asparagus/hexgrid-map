@@ -65,7 +65,6 @@ canvas {
   display: inline-block;
   width: 2em;
   height: 2em;
-  background-color: blue;
   border: 1px solid black;
 }
 
@@ -89,9 +88,6 @@ canvas {
   border-color: black;
   border-width: 2px;
   width: 160px;
-
-  color: #202124;
-  background-color: #efefef;
 }
 
 #tooltip div {
@@ -117,7 +113,6 @@ canvas {
   padding: 5px 10px;
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
-  background-color: #cdcdcd;
 }
 
 #tooltip-metric-value,
