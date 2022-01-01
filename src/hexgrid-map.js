@@ -28,6 +28,10 @@ class Visualization {
     tooltipHeader;
     legend;
     index;
+    selected;
+    selectedX;
+    selectedY;
+    selectedColor;
 
     constructor(baseSelector) {
         this.base = d3.select(baseSelector);
@@ -54,19 +58,21 @@ class Visualization {
         this.tooltipHeader = ttip.selectChildren("#tooltip-header");
         this.legend = lgnd;
         this.index = index;
+        this.selected = false;
 
         const handler = function(e) {
             let mouseX = e.layerX;
             let mouseY = e.layerY;
             let node = select(mouseX, mouseY);
-            tooltip(mouseX, mouseY + 15, node);
+            tooltip(node);
         };
         canvas.node().addEventListener("mousemove", handler, true);
-        canvas.node().addEventListener("mouseleave", e => tooltip(null, null, undefined), true);
+        canvas.node().addEventListener("mouseleave", e => tooltip(undefined), true);
     }
 }
 
 function select(mouseX, mouseY) {
+    const radius = Number(viz.canvas.attr("hexagon-radius"));
     let candidates = [];
     let approximateIndexY = binarySearch(viz.index.map(el => el[0].y), mouseY);
     for (let y = approximateIndexY - 1; y <= approximateIndexY + 1 && y < viz.index.length; y++) {
@@ -88,7 +94,7 @@ function select(mouseX, mouseY) {
             closestDistance = dist;
         }
     });
-    return closestDistance < closest.radius ? closest : undefined;
+    return closestDistance < radius ? closest : undefined;
 }
 
 function buildLegend(base) {
@@ -119,7 +125,7 @@ function legend(metricName, valueScale, colorScale) {
         let legendColor = legendValues[i].getElementsByClassName("legend-color")[0];
         let idx = legendNumber.getAttribute("idx");
         let value = valueScale.invert(idx / 10);
-        legendNumber.innerHTML = value.toFixed(2).toLocaleString('en', {useGrouping: true});
+        legendNumber.innerHTML = value.toFixed(2).toLocaleString("en", {useGrouping: true});
         legendColor.style["background-color"] = colorScale(value);
     };
 }
@@ -145,16 +151,28 @@ function buildTooltip(base) {
     return container;
 }
 
-function tooltip(x, y, node) {
+styles = {
+    canvasSideMargin: 80,
+    canvasTopMargin: 60,
+    canvasBottomMargin: 0,
+    tooltipStickLength: 15,
+    tooltipBorderWidth: 2,
+    legendVerticalWidth: 200,
+    legendHorizontalHeight: 80,
+}
+
+function tooltip(node) {
+    const radius = Number(viz.canvas.attr("hexagon-radius"));
     let ttip = d3.select("#tooltip");
     if (node === undefined || node.metric === undefined) {
         d3.select("#tooltip").style("display", "none");
+        window.viz.selected = false;
     } else {
         let metricName = ttip.attr("metric") || "Metric";
         let showCount = Number(ttip.attr("count"));
-        let height = window.viz.canvas.attr("height") / 2;
-        let tooltipX = x;
-        let tooltipY = height - y + 30;
+        let height = window.viz.canvas.attr("height") / (window.devicePixelRatio || 1);
+        let tooltipX = node.x;
+        let tooltipY = height - node.y + radius + window.styles.tooltipStickLength - window.styles.tooltipBorderWidth;
         ttip
           .style("display", "block")
           .style("left", `${tooltipX}px`)
@@ -164,17 +182,46 @@ function tooltip(x, y, node) {
         d3.select("#tooltip-metric-name")
           .text(metricName);
         d3.select("#tooltip-metric-value")
-          .text((+node.metric.toFixed(2)).toLocaleString('en', {useGrouping: true}));
+          .text((+node.metric.toFixed(2)).toLocaleString("en", {useGrouping: true}));
         if (showCount) {
             d3.select("#tooltip-count-container")
               .style("display", "block");
             d3.select("#tooltip-count-value")
-              .text(node.count.toLocaleString('en', {useGrouping: true}));
+              .text(node.count.toLocaleString("en", {useGrouping: true}));
         } else {
             d3.select("#tooltip-count-container")
               .style("display", "none");
         }
+        window.viz.selected = true;
+        window.viz.selectedX = node.x;
+        window.viz.selectedY = node.y;
+        window.viz.selectedColor = node.color;
     }
+}
+
+const pSBC=(p,c0,c1,l)=>{
+	let r,g,b,P,f,t,h,i=parseInt,m=Math.round,a=typeof(c1)=="string";
+	if(typeof(p)!="number"||p<-1||p>1||typeof(c0)!="string"||(c0[0]!='r'&&c0[0]!='#')||(c1&&!a))return null;
+	if(!this.pSBCr)this.pSBCr=(d)=>{
+		let n=d.length,x={};
+		if(n>9){
+			[r,g,b,a]=d=d.split(","),n=d.length;
+			if(n<3||n>4)return null;
+			x.r=i(r[3]=="a"?r.slice(5):r.slice(4)),x.g=i(g),x.b=i(b),x.a=a?parseFloat(a):-1
+		}else{
+			if(n==8||n==6||n<4)return null;
+			if(n<6)d="#"+d[1]+d[1]+d[2]+d[2]+d[3]+d[3]+(n>4?d[4]+d[4]:"");
+			d=i(d.slice(1),16);
+			if(n==9||n==5)x.r=d>>24&255,x.g=d>>16&255,x.b=d>>8&255,x.a=m((d&255)/0.255)/1000;
+			else x.r=d>>16,x.g=d>>8&255,x.b=d&255,x.a=-1
+		}return x};
+	h=c0.length>9,h=a?c1.length>9?true:c1=="c"?!h:false:h,f=this.pSBCr(c0),P=p<0,t=c1&&c1!="c"?this.pSBCr(c1):P?{r:0,g:0,b:0,a:-1}:{r:255,g:255,b:255,a:-1},p=P?p*-1:p,P=1-p;
+	if(!f||!t)return null;
+	if(l)r=m(P*f.r+p*t.r),g=m(P*f.g+p*t.g),b=m(P*f.b+p*t.b);
+	else r=m((P*f.r**2+p*t.r**2)**0.5),g=m((P*f.g**2+p*t.g**2)**0.5),b=m((P*f.b**2+p*t.b**2)**0.5);
+	a=f.a,t=t.a,f=a>=0||t>=0,a=f?a<0?t:t<0?a:a*P+t*p:0;
+	if(h)return"rgb"+(f?"a(":"(")+r+","+g+","+b+(f?","+m(a*1000)/1000:"")+")";
+	else return"#"+(4294967296+r*16777216+g*65536+b*256+(f?m(a*255):0)).toString(16).slice(1,f?undefined:-2)
 }
 
 function update(data) {
@@ -212,8 +259,8 @@ function update(data) {
     const avg = (arr) => arr.length > 0 ? sum(arr) / count(arr) : undefined;
     const aggregation = {"count": count, "sum": sum, "avg": avg}[metricAggregationName];
     const dimensions = {
-        width: dscc.getWidth() - (legendDisplay && ["left", "right"].includes(legendLocation) ? 200 : 0) - 160,
-        height: dscc.getHeight() - (legendDisplay && ["top", "bottom"].includes(legendLocation) ? 120 : 0) - 60,
+        width: dscc.getWidth() - (legendDisplay && ["left", "right"].includes(legendLocation) ? window.styles.legendVerticalWidth : 0) - 2 * window.styles.canvasSideMargin,
+        height: dscc.getHeight() - (legendDisplay && ["top", "bottom"].includes(legendLocation) ? window.styles.legendHorizontalHeight : 0) - window.styles.canvasTopMargin - window.styles.canvasBottomMargin,
         hexagonRadius: hexagonSize,
         pixelRatio: window.devicePixelRatio || 1
     };
@@ -222,6 +269,7 @@ function update(data) {
 
     window.viz.canvas
       .attr("aggregation", metricAggregationName)
+      .attr("hexagon-radius", dimensions.hexagonRadius)
       .attr("width", dimensions.width * dimensions.pixelRatio)
       .attr("height", dimensions.height * dimensions.pixelRatio)
       .style("width", `${dimensions.width}px`)
@@ -232,7 +280,6 @@ function update(data) {
       .attr("count", Number(tooltipDisplayCount))
       .style("font-size", `${tooltipFontSize}px`)
       .style("font-family", tooltipFontFamily);
-
     // Data
     const pointData = data.tables.DEFAULT;
 
@@ -252,6 +299,7 @@ function update(data) {
     // Hexgrid instance.
     const hex = hexgrid(pointData, ["metric"]);
     const hexagon = hex.hexagon();
+    window.hexagon = hexagon;
     // Aggregation & standardization
     hex.grid.layout.forEach(hexa => {
         hexa.radius = dimensions.hexagonRadius;
@@ -270,6 +318,9 @@ function update(data) {
 
     // Coloring
     const colorize = val => val === undefined ? colors.map : colors.scale(standardize(val));
+    hex.grid.layout.forEach(hexa => {
+        hexa.color = colorize(hexa.metric);
+    });
 
     // Set up legend
     if (legendDisplay) {
@@ -311,14 +362,14 @@ function update(data) {
       .classed("hex", true)
       .attr("x", hex => hex.x)
       .attr("y", hex => hex.y)
-      .attr("color", hex => colorize(hex.metric))
+      .attr("color", hex => hex.color)
       .attr("hexagon", hexagon);
 
     // When updating, adjust everything
     dataBinding
       .attr("x", hex => hex.x)
       .attr("y", hex => hex.y)
-      .attr("color", hex => colorize(hex.metric))
+      .attr("color", hex => hex.color)
       .attr("hexagon", hexagon);
 
     dataBinding.exit().remove();
@@ -364,6 +415,17 @@ function draw() {
         window.viz.context.fill(new Path2D(hex.attr("hexagon")));
         window.viz.context.restore();
     });
+
+    if (window.viz.selected) {
+        let path = new Path2D(window.hexagon);
+        window.viz.context.save();
+        window.viz.context.translate(window.viz.selectedX, window.viz.selectedY);
+        window.viz.context.lineWidth = 2;
+        window.viz.context.fillStyle = pSBC(0.1, window.viz.selectedColor);
+        window.viz.context.fill(path)
+        window.viz.context.stroke(path);
+        window.viz.context.restore();
+    }
 }
 
 function getColorScale(colorScaleName, invertedColorScale) {

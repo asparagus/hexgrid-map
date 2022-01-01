@@ -124,3 +124,7 @@ canvas {
 #tooltip-count-value {
   font-weight: bold;
 }
+
+#selection {
+  position: absolute;
+}
