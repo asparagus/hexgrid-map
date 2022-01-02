@@ -418,6 +418,10 @@
                     "defaultValue": "right",
                     "options": [
                         {
+                            "label": "None",
+                            "value": null
+                        },
+                        {
                             "label": "Left",
                             "value": "left"
                         },
@@ -451,12 +455,6 @@
                     "id": "legend_font_family",
                     "label": "Font family",
                     "defaultValue": "Roboto"
-                },
-                {
-                    "type": "CHECKBOX",
-                    "id": "legend_display",
-                    "label": "Display Legend",
-                    "defaultValue": true
                 }
             ]
         }
