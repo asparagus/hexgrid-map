@@ -201,11 +201,6 @@
             "elements": [
                 {
                     "type": "FILL_COLOR",
-                    "id": "background_color",
-                    "label": "Background Color"
-                },
-                {
-                    "type": "FILL_COLOR",
                     "id": "map_color",
                     "label": "Map Color"
                 },
@@ -419,7 +414,7 @@
                     "options": [
                         {
                             "label": "None",
-                            "value": null
+                            "value": "none"
                         },
                         {
                             "label": "Left",

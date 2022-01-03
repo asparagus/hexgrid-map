@@ -10,7 +10,6 @@ class Visualization {
         this.base = d3.select(baseSelector);
         this.canvas = this.base.append("canvas");
         this.context = this.canvas.node().getContext("2d");
-        this.styler = new Styler();
         this.legend = new Legend(this.base);
         this.tooltip = new Tooltip(this.base);
         this.index = new Index();
@@ -27,7 +26,7 @@ class Visualization {
         this.dataContainer = d3.select(document.createElement("custom"));
 
         let index = this.index;
-        const select = node => {this.tooltip.show(node); this.selected = node;}
+        const select = node => {this.tooltip.show(node); this.selected = node; this.draw();}
         const handler = function(e) {
             let mouseX = e.layerX;
             let mouseY = e.layerY;
@@ -41,21 +40,17 @@ class Visualization {
 
     /**
      * Update the styles of the Visualization.
-     * @param {object} style configuration coming from dscc
-     * @param {object} theme configuration coming from dscc
-     * @param {object} style configuration coming from dscc
+     * @param {object} style processed by styler
      */
-    style(style, theme, css) {
-        let wholeStyle = this.styler.mergeStyle(style, theme, css);
-        this.legend.style(wholeStyle.legend);
-        this.tooltip.style(wholeStyle.tooltip);
+    style(style) {
+        this.legend.style(style.legend);
+        this.tooltip.style(style.tooltip);
         
         this.colorscale = this.legend.colorscale;
-        this.colorize = val => val === undefined ? wholeStyle.canvas.tile : this.colorscale(val);
-        this.base.style("background-color", wholeStyle.canvas.background);
-        this.topMargin = wholeStyle.canvas.css.margin.top;
-        this.bottomMargin = wholeStyle.canvas.css.margin.bottom;
-        this.sideMargin = wholeStyle.canvas.css.margin.side;
+        this.colorize = val => val === undefined ? style.canvas.tile : this.colorscale(val);
+        this.topMargin = style.canvas.css.margin.top;
+        this.bottomMargin = style.canvas.css.margin.bottom;
+        this.sideMargin = style.canvas.css.margin.side;
     }
 
     /**
@@ -121,6 +116,11 @@ class Visualization {
         };
     }
 
+    /**
+     * Update the data for the visualization.
+     * @param {objet} points input data
+     * @param {object} dataConfig config affecting the data
+     */
     update(points, dataConfig) {
         const dimensions = this.computeDimensions();
         const hex = this.process(points, dataConfig, dimensions);
@@ -129,6 +129,7 @@ class Visualization {
         this.standardize = d3.scaleLinear()
             .domain(d3.extent(hex.grid.layout.map(hexa => hexa.metric)))
             .range([0, 1]);
+        hex.grid.layout.forEach(hexa => {hexa.standardizedMetric = this.standardize(hexa.metric);});
 
         this.resize(dimensions);
         this.hexagon = hex.hexagon();
@@ -147,16 +148,17 @@ class Visualization {
             .append("custom")
             .classed("hex", true)
             .attr("x", hexa => hexa.x)
-            .attr("y", hexa => hexa.y)
-            .attr("color", hexa => this.colorize(this.standardize(hexa.metric)));
+            .attr("y", hexa => hexa.y);
 
         // When updating, adjust everything
         dataBinding
             .attr("x", hexa => hexa.x)
-            .attr("y", hexa => hexa.y)
-            .attr("color", hexa => this.colorize(this.standardize(hexa.metric)));
+            .attr("y", hexa => hexa.y);
 
         dataBinding.exit().remove();
+
+        // Draw the map
+        this.draw();
     }
 
     /**
@@ -172,6 +174,7 @@ class Visualization {
         context.fill();
 
         // Paint hexagons
+        let colorize = this.colorize;
         let elements = this.dataContainer.selectAll("custom.hex");
         elements.each(function(d) {
             let hex = d3.select(this);
@@ -181,7 +184,7 @@ class Visualization {
             context.lineWidth = 1;
             context.fillStyle = "black";
             context.stroke(path);
-            context.fillStyle = hex.attr("color");
+            context.fillStyle = colorize(d.standardizedMetric);
             context.fill(path);
             context.restore();
         });
@@ -192,7 +195,7 @@ class Visualization {
             context.save();
             context.translate(this.selected.x, this.selected.y);
             context.lineWidth = 2;
-            context.fillStyle = pSBC(0.1, this.colorize(this.standardize(this.selected.metric)));
+            context.fillStyle = pSBC(0.1, colorize(this.selected.standardizedMetric));
             context.fill(path);  // Highlight
             context.stroke(path);  // Border
             context.restore();
@@ -299,12 +302,26 @@ class Index {
     }
 }
 
+/**
+ * Class to handle style settings.
+ */
 class Styler {
 
+    /**
+     * Construct an instance of Styler with an initial style config.
+     * @param {object} config initial style configuration
+     */
     constructor(config) {
         this.config = config;
     }
 
+    /**
+     * Merge all styles and return whether the new resulting style has changes.
+     * @param {object} style object coming from dscc
+     * @param {object} theme object coming from dscc
+     * @param {object} css object with styles defined in css
+     * @returns Whether the style has been changed
+     */
     update(style, theme, css) {
         let config = this.mergeStyle(style, theme, css);
         if (deepEqual(config, this.config)) {
@@ -314,10 +331,16 @@ class Styler {
         return true;
     }
 
+    /**
+     * Merge all styles into one object grouped by components.
+     * @param {object} style object coming from dscc
+     * @param {object} theme object coming from dscc
+     * @param {object} css object with styles defined in css
+     * @returns the merged style object
+     */
     mergeStyle(style, theme, css) {
         let merge = {
             canvas: {
-                background: style.background_color.value.color || theme.themeFillColor.color,
                 tile: style.map_color.value.color || theme.themeAccentFontColor.color,
                 css: {
                     margin: {
@@ -328,7 +351,7 @@ class Styler {
                 }
             },
             legend: {
-                location: style.legend_location.value,
+                location: style.legend_location.value == "none" ? null : style.legend_location.value,
                 scale: {
                     name: style.colorscale.value,
                     inverted: style.inverted_colorscale.value
@@ -592,8 +615,29 @@ function deepEqual(x, y) {
 }
 
 function update(data) {
-    if (window.viz === undefined) {
+    let firstTime = window.viz === undefined;
+    if (firstTime) {
         window.viz = new Visualization("body");
+        window.styler = new Styler();
+    }
+
+    let css = {
+        canvasSideMargin: 80,
+        canvasTopMargin: 60,
+        canvasBottomMargin: 0,
+        tooltipStickLength: 15,
+        tooltipBorderWidth: 2,
+        legendVerticalWidth: 200,
+        legendHorizontalHeight: 80,
+    }
+
+    if (window.styler.update(data.style, data.theme, css)) {
+        let style = this.styler.config;
+        window.viz.style(style);
+        if (!firstTime) {
+            // Skip data update if not needed.
+            return;
+        }
     }
 
     // Data
@@ -606,26 +650,8 @@ function update(data) {
         aggregation: data.style.aggregation.value
     }
 
-    let css = {
-        canvasSideMargin: 80,
-        canvasTopMargin: 60,
-        canvasBottomMargin: 0,
-        tooltipStickLength: 15,
-        tooltipBorderWidth: 2,
-        legendVerticalWidth: 200,
-        legendHorizontalHeight: 80,
-    }
-    // Style options
-    window.viz.style(data.style, data.theme, css);
-
     // Data options
     window.viz.update(points, dataConfig);
-}
-
-function draw() {
-    if (window.viz !== undefined) {
-        window.viz.draw();
-    }
 }
 
 function getColorScale(colorScaleName, invertedColorScale) {
@@ -651,5 +677,4 @@ function getProjection(projectionName) {
     return availableProjections[projectionName]();
 }
 
-d3.timer(draw);
 dscc.subscribeToData(update, { transform: dscc.objectTransform });
