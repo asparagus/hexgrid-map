@@ -17,7 +17,11 @@ class Visualization {
         this.selected = null;
         this.colorscale = undefined;
         this.colorize = undefined;
+        this.standardize = undefined;
         this.hexagon = undefined;
+        this.topMargin = undefined;
+        this.bottomMargin = undefined;
+        this.sideMargin = undefined;
 
         // Create a d3 selection on an in-memory element of type 'custom'
         this.dataContainer = d3.select(document.createElement("custom"));
@@ -37,19 +41,39 @@ class Visualization {
 
     /**
      * Update the styles of the Visualization.
-     * @param {object} style configuration built by Styler for the map
+     * @param {object} style configuration coming from dscc
+     * @param {object} theme configuration coming from dscc
+     * @param {object} style configuration coming from dscc
      */
-    style(style) {
-        this.legend.style(style.legend);
-        this.tooltip.style(style.tooltip);
+    style(style, theme, css) {
+        let wholeStyle = this.styler.mergeStyle(style, theme, css);
+        this.legend.style(wholeStyle.legend);
+        this.tooltip.style(wholeStyle.tooltip);
         
         this.colorscale = this.legend.colorscale;
-        this.colorize = val => val === undefined ? style.map.tile : this.colorscale(val);
-        this.base.style("background-color", style.map.background);
+        this.colorize = val => val === undefined ? wholeStyle.canvas.tile : this.colorscale(val);
+        this.base.style("background-color", wholeStyle.canvas.background);
+        this.topMargin = wholeStyle.canvas.css.margin.top;
+        this.bottomMargin = wholeStyle.canvas.css.margin.bottom;
+        this.sideMargin = wholeStyle.canvas.css.margin.side;
     }
 
-    process(points, geo, projection, dimensions, aggregation) {
-        // Projection
+    /**
+     * Process the points into hexagons using d3.hexgrid.
+     * @param {object} points
+     * @param {object} dataConfig
+     * @param {object} dimensions
+     * @returns hexagon points bucketed
+     */
+    process(points, dataConfig, dimensions) {
+        const count = (arr) => arr.length > 0 ? arr.length : undefined;
+        const sum = (arr) => arr.length > 0 ? arr.reduce((a, b) => a + b, 0) : undefined;
+        const avg = (arr) => arr.length > 0 ? sum(arr) / count(arr) : undefined;
+        const aggregation = {"count": count, "sum": sum, "avg": avg}[dataConfig.aggregation];
+
+        const geo = getMapGeoJson(dataConfig.map);
+        const projection = getProjection(dataConfig.projection).fitSize([dimensions.width, dimensions.height], geo);
+        // Projection and path.
         const geoPath = d3.geoPath()
             .projection(projection)
             .context(this.context);
@@ -60,13 +84,12 @@ class Visualization {
             .geography(geo)
             .projection(projection)
             .pathGenerator(geoPath)
-            .hexRadius(dimensions.hexagonRadius);
-
+            .hexRadius(dataConfig.hexagonRadius);
         // Hexgrid instance.
-        let hex = hexgrid(points, ["metric"]);
+        const hex = hexgrid(points, ["metric"]);
         // Aggregation & standardization
         hex.grid.layout.forEach(hexa => {
-            hexa.radius = dimensions.hexagonRadius;
+            hexa.radius = dataConfig.hexagonRadius;
             hexa.count = hexa.length;
             hexa.metric = aggregation(hexa.map(x => +x.metric));
             hexa.coords = projection.invert([hexa.x - hex.grid.layout[0].x, hexa.y - hex.grid.layout[0].y]);
@@ -74,51 +97,47 @@ class Visualization {
         return hex;
     }
 
+    /**
+     * Apply new dimensions.
+     * @param {object} dimensions contains width, height, pixelRatio
+     */
     resize(dimensions) {
-        this.context.scale(dimensions.pixelRatio, dimensions.pixelRatio);
         this.canvas
             .attr("width", dimensions.width * dimensions.pixelRatio)
             .attr("height", dimensions.height * dimensions.pixelRatio)
             .style("width", `${dimensions.width}px`);
+        this.context.scale(dimensions.pixelRatio, dimensions.pixelRatio);
+    }
+
+    /**
+     * Compute the width / height / pixelRatio.
+     * @returns the computed dimensions
+     */
+    computeDimensions() {
+        return {
+            width: dscc.getWidth() - ((this.legend.display && ["left", "right"].includes(this.legend.location)) ? this.legend.verticalWidth : 0) - 2 * this.sideMargin,
+            height: dscc.getHeight() - ((this.legend.display && ["top", "bottom"].includes(this.legend.location)) ? this.legend.horizontalHeight : 0) - this.topMargin - this.bottomMargin,
+            pixelRatio: window.devicePixelRatio || 1
+        };
     }
 
     update(points, dataConfig) {
-        this.legend.update(dataConfig);
-        this.tooltip.update(dataConfig);
-        const dimensions = {
-            width: dscc.getWidth() - (this.legend.display && ["left", "right"].includes(this.legend.location) ? window.cssDimensions.legendVerticalWidth : 0) - 2 * window.cssDimensions.canvasSideMargin,
-            height: dscc.getHeight() - (this.legend.display && ["top", "bottom"].includes(this.legend.location) ? window.cssDimensions.legendHorizontalHeight : 0) - window.cssDimensions.canvasTopMargin - window.cssDimensions.canvasBottomMargin,
-            hexagonRadius: dataConfig.hexagonRadius,
-            pixelRatio: window.devicePixelRatio || 1
-        };
-
-        const count = (arr) => arr.length > 0 ? arr.length : undefined;
-        const sum = (arr) => arr.length > 0 ? arr.reduce((a, b) => a + b, 0) : undefined;
-        const avg = (arr) => arr.length > 0 ? sum(arr) / count(arr) : undefined;
-        const aggregation = {"count": count, "sum": sum, "avg": avg}[dataConfig.aggregation];
-        const geo = getMapGeoJson(dataConfig.map);
-        const projection = getProjection(dataConfig.projection).fitSize([dimensions.width, dimensions.height], geo);
-
-        this.resize(dimensions);
-
-        let hex = this.process(points, geo, projection, dimensions, aggregation);
-
-        // Indexing
-        this.index.update(hex.grid.layout, dimensions.hexagonRadius);
+        const dimensions = this.computeDimensions();
+        const hex = this.process(points, dataConfig, dimensions);
 
         // Metric coloring
-        const aggregatedValues = hex.grid.layout.map(hexa => hexa.metric);
-        const standardize = d3.scaleLinear()
-            .domain(d3.extent(aggregatedValues))
+        this.standardize = d3.scaleLinear()
+            .domain(d3.extent(hex.grid.layout.map(hexa => hexa.metric)))
             .range([0, 1]);
-        console.log(aggregatedValues);
 
-        // Coloring
-        hex.grid.layout.forEach(hexa => {
-            hexa.color = this.colorize(standardize(hexa.metric));
-        });
+        this.resize(dimensions);
+        this.hexagon = hex.hexagon();
+        this.index.update(hex.grid.layout, dataConfig.hexagonRadius);
+        this.legend.update(dataConfig);
+        this.tooltip.update(dataConfig);
+        this.legend.updateValues(this.standardize.invert);
 
-        this.legend.updateValues(standardize.invert);
+        // Binding
         let dataBinding = this.dataContainer.selectAll("custom.hex")
             .data(hex.grid.layout, function(d) { return d; });
 
@@ -127,15 +146,15 @@ class Visualization {
         dataBinding.enter()
             .append("custom")
             .classed("hex", true)
-            .attr("x", hex => hex.x)
-            .attr("y", hex => hex.y)
-            .attr("color", hex => hex.color);
-    
+            .attr("x", hexa => hexa.x)
+            .attr("y", hexa => hexa.y)
+            .attr("color", hexa => this.colorize(this.standardize(hexa.metric)));
+
         // When updating, adjust everything
         dataBinding
-            .attr("x", hex => hex.x)
-            .attr("y", hex => hex.y)
-            .attr("color", hex => hex.color);
+            .attr("x", hexa => hexa.x)
+            .attr("y", hexa => hexa.y)
+            .attr("color", hexa => this.colorize(this.standardize(hexa.metric)));
 
         dataBinding.exit().remove();
     }
@@ -173,7 +192,7 @@ class Visualization {
             context.save();
             context.translate(this.selected.x, this.selected.y);
             context.lineWidth = 2;
-            context.fillStyle = pSBC(0.1, this.selected.color);
+            context.fillStyle = pSBC(0.1, this.colorize(this.standardize(this.selected.metric)));
             context.fill(path);  // Highlight
             context.stroke(path);  // Border
             context.restore();
@@ -280,65 +299,14 @@ class Index {
     }
 }
 
-cssDimensions = {
-    canvasSideMargin: 80,
-    canvasTopMargin: 60,
-    canvasBottomMargin: 0,
-    tooltipStickLength: 15,
-    tooltipBorderWidth: 2,
-    legendVerticalWidth: 200,
-    legendHorizontalHeight: 80,
-}
-
-const pSBC=(p,c0,c1,l)=>{
-    let r,g,b,P,f,t,h,i=parseInt,m=Math.round,a=typeof(c1)=="string";
-    if(typeof(p)!="number"||p<-1||p>1||typeof(c0)!="string"||(c0[0]!='r'&&c0[0]!='#')||(c1&&!a))return null;
-    if(!this.pSBCr)this.pSBCr=(d)=>{
-        let n=d.length,x={};
-        if(n>9){
-            [r,g,b,a]=d=d.split(","),n=d.length;
-            if(n<3||n>4)return null;
-            x.r=i(r[3]=="a"?r.slice(5):r.slice(4)),x.g=i(g),x.b=i(b),x.a=a?parseFloat(a):-1
-        } else{
-            if(n==8||n==6||n<4)return null;
-            if(n<6)d="#"+d[1]+d[1]+d[2]+d[2]+d[3]+d[3]+(n>4?d[4]+d[4]:"");
-            d=i(d.slice(1),16);
-            if(n==9||n==5)x.r=d>>24&255,x.g=d>>16&255,x.b=d>>8&255,x.a=m((d&255)/0.255)/1000;
-            else x.r=d>>16,x.g=d>>8&255,x.b=d&255,x.a=-1
-        } return x};
-    h=c0.length>9,h=a?c1.length>9?true:c1=="c"?!h:false:h,f=this.pSBCr(c0),P=p<0,t=c1&&c1!="c"?this.pSBCr(c1):P?{r:0,g:0,b:0,a:-1}:{r:255,g:255,b:255,a:-1},p=P?p*-1:p,P=1-p;
-    if(!f||!t)return null;
-    if(l)r=m(P*f.r+p*t.r),g=m(P*f.g+p*t.g),b=m(P*f.b+p*t.b);
-    else r=m((P*f.r**2+p*t.r**2)**0.5),g=m((P*f.g**2+p*t.g**2)**0.5),b=m((P*f.b**2+p*t.b**2)**0.5);
-    a=f.a,t=t.a,f=a>=0||t>=0,a=f?a<0?t:t<0?a:a*P+t*p:0;
-    if(h)return"rgb"+(f?"a(":"(")+r+","+g+","+b+(f?","+m(a*1000)/1000:"")+")";
-    else return"#"+(4294967296+r*16777216+g*65536+b*256+(f?m(a*255):0)).toString(16).slice(1,f?undefined:-2)
-}
-
-function deepEqual(x, y) {
-    if (typeof(x) === "object") {
-        if (typeof(y) === "object") {
-            for (let prop in x) {
-                if (!deepEqual(x[prop], y[prop])) {
-                    return false;
-                }
-            }
-            return true;
-        } else {
-            return false;
-        }
-    }
-    return x === y;
-}
-
 class Styler {
 
     constructor(config) {
         this.config = config;
     }
 
-    update(style, theme) {
-        let config = this.mergeStyle(style, theme);
+    update(style, theme, css) {
+        let config = this.mergeStyle(style, theme, css);
         if (deepEqual(config, this.config)) {
             return false;
         }
@@ -346,11 +314,18 @@ class Styler {
         return true;
     }
 
-    mergeStyle(style, theme) {
+    mergeStyle(style, theme, css) {
         let merge = {
-            map: {
+            canvas: {
                 background: style.background_color.value.color || theme.themeFillColor.color,
                 tile: style.map_color.value.color || theme.themeAccentFontColor.color,
+                css: {
+                    margin: {
+                        top: css.canvasTopMargin,
+                        bottom: css.canvasBottomMargin,
+                        side: css.canvasSideMargin
+                    }
+                }
             },
             legend: {
                 location: style.legend_location.value,
@@ -362,6 +337,10 @@ class Styler {
                     color: style.legend_font_color.value.color || theme.themeFontColor.color,
                     size: style.legend_font_size.value,
                     family: style.legend_font_family.value || theme.themeFontFamily
+                },
+                css: {
+                    horizontalHeight: css.legendHorizontalHeight,
+                    verticalWidth: css.legendVerticalWidth
                 }
             },
             tooltip: {
@@ -371,6 +350,11 @@ class Styler {
                     color: style.tooltip_font_color.value.color || theme.themeAccentFontColor.color,
                     size: style.tooltip_font_size.value,
                     family: style.tooltip_font_family.value || theme.themeFontFamily
+                },
+                css: {
+                    topOffset: css.canvasTopMargin,
+                    stickLength: css.tooltipStickLength,
+                    borderWidth: css.tooltipBorderWidth
                 }
             }
         }
@@ -406,6 +390,9 @@ class Tooltip {
             .text("Record count");
         this.countValue = this.countContainer.append("div")
             .attr("id", "tooltip-count-value");
+        this.stickLength = undefined;
+        this.borderWidth = undefined;
+        this.topOffset = undefined;
     }
 
     /**
@@ -423,6 +410,9 @@ class Tooltip {
         this.header
             .style("background-color", darkerFill);
         this.countContainer.style("display", style.displayCount ? "block" : "none");
+        this.stickLength = style.css.stickLength;
+        this.borderWidth = style.css.borderWidth;
+        this.topOffset = style.css.topOffset;
     }
 
     /**
@@ -442,16 +432,16 @@ class Tooltip {
         if (node === null || node.metric === undefined) {
             this.container.style("display", "none");
         } else {
-            let height = window.viz.canvas.attr("height") / (window.devicePixelRatio || 1);
-            let tooltipX = node.x;
-            let tooltipY = height - node.y + this.radius + window.cssDimensions.tooltipStickLength - window.cssDimensions.tooltipBorderWidth;
-            this.container
-                .style("display", "block")
-                .style("left", `${tooltipX}px`)
-                .style("bottom", `${tooltipY}px`);
             this.header.text(`lat: ${node.coords[1].toFixed(2)}, long: ${node.coords[0].toFixed(2)}`);
             this.metricValue.text((+node.metric.toFixed(2)).toLocaleString("en", {useGrouping: true}));
             this.countValue.text(node.count.toLocaleString("en", {useGrouping: true}));
+            this.container
+                .style("display", "block")
+            let tooltipX = node.x;
+            let tooltipY = node.y + this.topOffset - this.radius - this.container.node().offsetHeight - this.stickLength + this.borderWidth;
+            this.container
+                .style("left", `${tooltipX}px`)
+                .style("top", `${tooltipY}px`);
         }
     }
 }
@@ -481,9 +471,11 @@ class Legend {
             value.append("span").attr("class", "legend-number");
             value.append("span").attr("class", "legend-color");
         }
-        this.display = false;
-        this.location = null;
-        this.colorscale = null;
+        this.display = undefined;
+        this.location = undefined;
+        this.colorscale = undefined;
+        this.horizontalHeight = undefined;
+        this.verticalWidth = undefined;
     }
 
     /**
@@ -492,8 +484,10 @@ class Legend {
      * @param {string} metricName name of the metric to be displayed
      */
     style(style) {
-        this.colorscale = getColorScale(style.scale.name, style.scale.inverted);
         this.location = style.location;
+        this.colorscale = getColorScale(style.scale.name, style.scale.inverted);
+        this.horizontalHeight = style.css.horizontalHeight;
+        this.verticalWidth = style.css.verticalWidth;
         this.display = this.location != null;
         if (this.display) {
             this.container
@@ -554,6 +548,49 @@ class Legend {
     }
 }
 
+// Lighten / darken colors.
+// Source: https://github.com/PimpTrizkit/PJs/wiki/12.-Shade,-Blend-and-Convert-a-Web-Color-(pSBC.js)
+const pSBC=(p,c0,c1,l)=>{
+    let r,g,b,P,f,t,h,i=parseInt,m=Math.round,a=typeof(c1)=="string";
+    if(typeof(p)!="number"||p<-1||p>1||typeof(c0)!="string"||(c0[0]!='r'&&c0[0]!='#')||(c1&&!a))return null;
+    if(!this.pSBCr)this.pSBCr=(d)=>{
+        let n=d.length,x={};
+        if(n>9){
+            [r,g,b,a]=d=d.split(","),n=d.length;
+            if(n<3||n>4)return null;
+            x.r=i(r[3]=="a"?r.slice(5):r.slice(4)),x.g=i(g),x.b=i(b),x.a=a?parseFloat(a):-1
+        } else{
+            if(n==8||n==6||n<4)return null;
+            if(n<6)d="#"+d[1]+d[1]+d[2]+d[2]+d[3]+d[3]+(n>4?d[4]+d[4]:"");
+            d=i(d.slice(1),16);
+            if(n==9||n==5)x.r=d>>24&255,x.g=d>>16&255,x.b=d>>8&255,x.a=m((d&255)/0.255)/1000;
+            else x.r=d>>16,x.g=d>>8&255,x.b=d&255,x.a=-1
+        } return x};
+    h=c0.length>9,h=a?c1.length>9?true:c1=="c"?!h:false:h,f=this.pSBCr(c0),P=p<0,t=c1&&c1!="c"?this.pSBCr(c1):P?{r:0,g:0,b:0,a:-1}:{r:255,g:255,b:255,a:-1},p=P?p*-1:p,P=1-p;
+    if(!f||!t)return null;
+    if(l)r=m(P*f.r+p*t.r),g=m(P*f.g+p*t.g),b=m(P*f.b+p*t.b);
+    else r=m((P*f.r**2+p*t.r**2)**0.5),g=m((P*f.g**2+p*t.g**2)**0.5),b=m((P*f.b**2+p*t.b**2)**0.5);
+    a=f.a,t=t.a,f=a>=0||t>=0,a=f?a<0?t:t<0?a:a*P+t*p:0;
+    if(h)return"rgb"+(f?"a(":"(")+r+","+g+","+b+(f?","+m(a*1000)/1000:"")+")";
+    else return"#"+(4294967296+r*16777216+g*65536+b*256+(f?m(a*255):0)).toString(16).slice(1,f?undefined:-2)
+}
+
+function deepEqual(x, y) {
+    if (typeof(x) === "object") {
+        if (typeof(y) === "object") {
+            for (let prop in x) {
+                if (!deepEqual(x[prop], y[prop])) {
+                    return false;
+                }
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+    return x === y;
+}
+
 function update(data) {
     if (window.viz === undefined) {
         window.viz = new Visualization("body");
@@ -569,9 +606,17 @@ function update(data) {
         aggregation: data.style.aggregation.value
     }
 
+    let css = {
+        canvasSideMargin: 80,
+        canvasTopMargin: 60,
+        canvasBottomMargin: 0,
+        tooltipStickLength: 15,
+        tooltipBorderWidth: 2,
+        legendVerticalWidth: 200,
+        legendHorizontalHeight: 80,
+    }
     // Style options
-    window.viz.styler.update(data.style, data.theme);
-    window.viz.style(window.viz.styler.config);
+    window.viz.style(data.style, data.theme, css);
 
     // Data options
     window.viz.update(points, dataConfig);
